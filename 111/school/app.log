@@ -2719,3 +2719,17 @@ django.db.utils.OperationalError: (1050, "Table 'groupe' already exists")
 [INFO] 2025-12-24 22:36:17 wsgi <module>:53 - ============================================================
 [INFO] 2025-12-24 22:36:17 wsgi <module>:58 - [OK] Django WSGI application loaded successfully
 [INFO] 2025-12-24 22:36:17 wsgi <module>:63 - Skipping database warmup - connections will be established on first request
+[INFO] 2025-12-24 22:55:22 autoreload trigger_reload:265 - C:\Users\derin\Downloads\Compressed\GSS-master_2\GSS-master\111\school\Schoolapp\cors_middleware.py changed, reloading.
+[INFO] 2025-12-24 22:55:25 autoreload run_with_reloader:681 - Watching for file changes with StatReloader
+[INFO] 2025-12-24 22:55:25 wsgi <module>:51 - ============================================================
+[INFO] 2025-12-24 22:55:25 wsgi <module>:52 - Starting Django WSGI initialization...
+[INFO] 2025-12-24 22:55:25 wsgi <module>:53 - ============================================================
+[INFO] 2025-12-24 22:55:25 wsgi <module>:58 - [OK] Django WSGI application loaded successfully
+[INFO] 2025-12-24 22:55:25 wsgi <module>:63 - Skipping database warmup - connections will be established on first request
+[INFO] 2025-12-24 22:56:09 autoreload trigger_reload:265 - C:\Users\derin\Downloads\Compressed\GSS-master_2\GSS-master\111\school\Schoolapp\cors_middleware.py changed, reloading.
+[INFO] 2025-12-24 22:56:10 autoreload run_with_reloader:681 - Watching for file changes with StatReloader
+[INFO] 2025-12-24 22:56:10 wsgi <module>:51 - ============================================================
+[INFO] 2025-12-24 22:56:10 wsgi <module>:52 - Starting Django WSGI initialization...
+[INFO] 2025-12-24 22:56:10 wsgi <module>:53 - ============================================================
+[INFO] 2025-12-24 22:56:10 wsgi <module>:58 - [OK] Django WSGI application loaded successfully
+[INFO] 2025-12-24 22:56:10 wsgi <module>:63 - Skipping database warmup - connections will be established on first request

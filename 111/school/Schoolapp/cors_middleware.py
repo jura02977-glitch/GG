@@ -10,21 +10,8 @@ class CORSMiddleware:
     
     def __init__(self, get_response):
         self.get_response = get_response
-        # List of allowed origins for the mobile app
-        self.allowed_origins = [
-            'http://localhost:3000',
-            'http://127.0.0.1:3000',
-            'http://localhost:8001',       # Mobile app dev server
-            'http://127.0.0.1:8001',
-            'http://192.168.1.36:8001',
-            'http://192.168.1.37:8001',
-            'http://192.168.1.36:3000',    # Local Network Access
-            'http://192.168.1.36:3001',    # Access from Phone Web Browser
-            'http://localhost',            # Capacitor Android
-            'capacitor://localhost',       # Capacitor iOS
-            'http://192.168.1.36',         # Direct IP
-            'http://192.168.1.37',         # Direct IP
-        ]
+        # Allow all origins for mobile app compatibility
+        self.allow_all_origins = True
     
     def __call__(self, request):
         # Handle preflight OPTIONS requests
@@ -35,13 +22,12 @@ class CORSMiddleware:
         # Process the request normally
         response = self.get_response(request)
         
-        # Add CORS headers to the response
-        origin = request.META.get('HTTP_ORIGIN', '')
-        if origin in self.allowed_origins or self._is_cors_allowed(request):
-            response['Access-Control-Allow-Origin'] = origin or '*'
-            response['Access-Control-Allow-Credentials'] = 'true'
-            response['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
-            response['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With, Accept'
+        # Add CORS headers to ALL responses (allow all origins)
+        origin = request.META.get('HTTP_ORIGIN', '*')
+        response['Access-Control-Allow-Origin'] = origin if origin else '*'
+        response['Access-Control-Allow-Credentials'] = 'true'
+        response['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+        response['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With, Accept'
         
         return response
     
@@ -50,20 +36,13 @@ class CORSMiddleware:
         from django.http import HttpResponse
         
         response = HttpResponse()
-        origin = request.META.get('HTTP_ORIGIN', '')
+        origin = request.META.get('HTTP_ORIGIN', '*')
         
-        if origin in self.allowed_origins or self._is_cors_allowed(request):
-            response['Access-Control-Allow-Origin'] = origin or '*'
-            response['Access-Control-Allow-Credentials'] = 'true'
-            response['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
-            response['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With, Accept'
-            response['Access-Control-Max-Age'] = '86400'  # 24 hours
+        response['Access-Control-Allow-Origin'] = origin if origin else '*'
+        response['Access-Control-Allow-Credentials'] = 'true'
+        response['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, OPTIONS'
+        response['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With, Accept'
+        response['Access-Control-Max-Age'] = '86400'  # 24 hours
         
         response.status_code = 200
         return response
-    
-    def _is_cors_allowed(self, request):
-        """Check if this is a request to the mobile API or media endpoints."""
-        path = request.path
-        return path.startswith('/api/mobile/') or path.startswith('/media/')
-
