@@ -40,7 +40,7 @@ if (BASE_DIR / 'db.sqlite3').exists() or os.environ.get('DEV') == '1':
     DEBUG = True
 
 
-ALLOWED_HOSTS = ['*',]
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '192.168.1.36', '*']
 
 # CSRF trusted origins for Railway
 CSRF_TRUSTED_ORIGINS = [
@@ -62,6 +62,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'Schoolapp.cors_middleware.CORSMiddleware',  # <-- AJOUTER CETTE LIGNE
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -123,6 +124,7 @@ DATABASES = {
         },
     }
 }
+
 
 # Log database configuration for debugging
 print(f"[SETTINGS] Running on Railway: {ON_RAILWAY}", flush=True)

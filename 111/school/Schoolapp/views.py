@@ -20,6 +20,7 @@ from .models import (
     Certification,
     CalendarEvent,
     Groupe,
+    Charge,
 )
 
 
@@ -45,7 +46,7 @@ from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_http_methods
 from django.http import JsonResponse
 from django.urls import reverse
 from io import BytesIO
@@ -5568,7 +5569,7 @@ def delete_versement_batch(request):
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
-### Charges CRUD
+### ges CRUD
 from django import forms
 from .models import Charge
 import os
@@ -6131,6 +6132,487 @@ def charge_ai_chat(request):
             except Exception:
                 pass
             return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+# ============================================
+# API REST Mobile pour Charges
+# ============================================
+
+@csrf_exempt
+def api_charges_list(request):
+    """API endpoint: GET all charges as JSON for mobile app.
+    
+    Returns JSON: { success: True, charges: [...], stats: {...} }
+    Query params:
+      - limit: max number of charges to return (default: 100)
+      - offset: pagination offset
+      - month: YYYY-MM to filter by month
+    """
+    try:
+        limit = int(request.GET.get('limit', 100))
+        offset = int(request.GET.get('offset', 0))
+        month_filter = request.GET.get('month', '')
+        
+        qs = Charge.objects.all().order_by('-date_paiement')
+        
+        # Filter by month if provided
+        if month_filter:
+            try:
+                year, month = month_filter.split('-')
+                qs = qs.filter(date_paiement__year=int(year), date_paiement__month=int(month))
+            except Exception:
+                pass
+        
+        total_count = qs.count()
+        charges = qs[offset:offset + limit]
+        
+        # Build response data
+        charges_data = []
+        for c in charges:
+            attachment_url = None
+            if getattr(c, 'attachment', None):
+                attachment_url = c.attachment.url
+            
+            charges_data.append({
+                'id': c.id,
+                'type_charge': c.type_charge or '',
+                'montant': float(c.montant or 0),
+                'date_paiement': c.date_paiement.isoformat() if c.date_paiement else None,
+                'mode_paiement': c.mode_paiement or '',
+                'reference': c.reference or '',
+                'remarque': c.remarque or '',
+                'formation_id': c.formation_id,
+                'formation_nom': c.formation.nom if c.formation else None,
+                'contact': c.contact or '',
+                'attachment': attachment_url,
+            })
+        
+        # Compute stats
+        now = timezone.now()
+        total_all = Charge.objects.aggregate(total=Sum('montant'))['total'] or 0
+        month_total = Charge.objects.filter(
+            date_paiement__year=now.year,
+            date_paiement__month=now.month
+        ).aggregate(total=Sum('montant'))['total'] or 0
+        
+        # Type distribution for chart
+        type_stats = Charge.objects.values('type_charge').annotate(
+            total=Sum('montant'),
+            count=Count('id')
+        ).order_by('-total')[:10]
+        
+        return JsonResponse({
+            'success': True,
+            'charges': charges_data,
+            'total_count': total_count,
+            'stats': {
+                'total_all': float(total_all),
+                'month_total': float(month_total),
+                'count': total_count,
+                'type_distribution': list(type_stats),
+            }
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@csrf_exempt
+def api_charges_all(request):
+    """API endpoint: GET all charges with pagination for a dedicated list view."""
+    try:
+        limit = int(request.GET.get('limit', 20))
+        page = int(request.GET.get('page', 1))
+        offset = (page - 1) * limit
+        
+        qs = Charge.objects.all().order_by('-date_paiement', '-id')
+        total_count = qs.count()
+        charges = qs[offset:offset + limit]
+        
+        charges_data = []
+        for c in charges:
+            attachment_url = None
+            if getattr(c, 'attachment', None):
+                attachment_url = c.attachment.url
+                
+            charges_data.append({
+                'id': c.id,
+                'type_charge': c.type_charge or '',
+                'montant': float(c.montant or 0),
+                'date_paiement': c.date_paiement.isoformat() if c.date_paiement else None,
+                'mode_paiement': c.mode_paiement or '',
+                'reference': c.reference or '',
+                'remarque': c.remarque or '',
+                'attachment': attachment_url,
+            })
+            
+        return JsonResponse({
+            'success': True,
+            'charges': charges_data,
+            'total': total_count,
+            'page': page,
+            'pages': (total_count + limit - 1) // limit
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@csrf_exempt
+def api_charge_detail(request, pk):
+    """API endpoint: GET single charge by ID.
+    
+    Returns JSON: { success: True, charge: {...} }
+    """
+    try:
+        c = get_object_or_404(Charge, pk=pk)
+        attachment_url = None
+        if getattr(c, 'attachment', None):
+            attachment_url = request.build_absolute_uri(c.attachment.url)
+            
+        charge_data = {
+            'id': c.id,
+            'type_charge': c.type_charge or '',
+            'montant': float(c.montant or 0),
+            'date_paiement': c.date_paiement.isoformat() if c.date_paiement else None,
+            'mode_paiement': c.mode_paiement or '',
+            'reference': c.reference or '',
+            'remarque': c.remarque or '',
+            'formation_id': c.formation_id,
+            'formation_nom': c.formation.nom if c.formation else None,
+            'contact': c.contact or '',
+            'attachment': attachment_url,
+        }
+        return JsonResponse({'success': True, 'charge': charge_data})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@csrf_exempt
+@require_POST
+def api_charge_create(request):
+    """API endpoint: POST to create a new charge.
+    
+    Accepts JSON body or form-data:
+      - type_charge: string (required)
+      - montant: decimal (required)
+      - date_paiement: YYYY-MM-DD (optional, defaults to today)
+      - mode_paiement: string (optional)
+      - reference: string (optional)
+      - remarque: string (optional)
+      - contact: string (optional)
+      - formation_id: int (optional)
+    
+    Returns JSON: { success: True, charge: {...}, id: int }
+    """
+    try:
+        # Parse request data
+        if request.content_type and 'application/json' in request.content_type:
+            try:
+                data = json.loads(request.body.decode('utf-8') or '{}')
+            except Exception:
+                data = {}
+        else:
+            data = request.POST.dict()
+        
+        # Validate required fields
+        type_charge = data.get('type_charge', '').strip()
+        montant = data.get('montant')
+        
+        if not type_charge:
+            return JsonResponse({'success': False, 'error': 'type_charge is required'}, status=400)
+        if montant is None:
+            return JsonResponse({'success': False, 'error': 'montant is required'}, status=400)
+        
+        try:
+            montant = Decimal(str(montant))
+        except Exception:
+            return JsonResponse({'success': False, 'error': 'Invalid montant value'}, status=400)
+        
+        # Parse date
+        date_paiement_str = data.get('date_paiement', '')
+        if date_paiement_str:
+            try:
+                date_paiement = datetime.strptime(date_paiement_str, '%Y-%m-%d').date()
+            except Exception:
+                date_paiement = date.today()
+        else:
+            date_paiement = date.today()
+        
+        # Create charge
+        charge = Charge.objects.create(
+            type_charge=type_charge,
+            montant=montant,
+            date_paiement=date_paiement,
+            mode_paiement=data.get('mode_paiement', '') or None,
+            reference=data.get('reference', '') or None,
+            remarque=data.get('remarque', '') or None,
+            contact=data.get('contact', '') or None,
+            formation_id=data.get('formation_id') if data.get('formation_id') else None,
+        )
+
+        # Handle attachment if any
+        if request.FILES.get('attachment'):
+            charge.attachment = request.FILES['attachment']
+            charge.save()
+            
+        attachment_url = None
+        if getattr(charge, 'attachment', None):
+            attachment_url = charge.attachment.url
+
+        charge_data = {
+            'id': charge.id,
+            'type_charge': charge.type_charge or '',
+            'montant': float(charge.montant or 0),
+            'date_paiement': charge.date_paiement.isoformat() if charge.date_paiement else None,
+            'mode_paiement': charge.mode_paiement or '',
+            'reference': charge.reference or '',
+            'remarque': charge.remarque or '',
+            'contact': charge.contact or '',
+            'formation_id': charge.formation_id,
+            'formation_nom': charge.formation.nom if charge.formation else None,
+            'attachment': attachment_url,
+        }
+        
+        return JsonResponse({'success': True, 'charge': charge_data})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@csrf_exempt
+@require_POST
+def api_charge_update(request, pk):
+    """API endpoint: POST to update an existing charge.
+    
+    Accepts JSON body or form-data with same fields as create.
+    Returns JSON: { success: True, charge: {...} }
+    """
+    try:
+        charge = get_object_or_404(Charge, pk=pk)
+        
+        # Parse request data
+        if request.content_type and 'application/json' in request.content_type:
+            try:
+                data = json.loads(request.body.decode('utf-8') or '{}')
+            except Exception:
+                data = {}
+        else:
+            data = request.POST.dict()
+        
+        # Update fields if provided
+        if 'type_charge' in data and data['type_charge']:
+            charge.type_charge = data['type_charge'].strip()
+        
+        if 'montant' in data:
+            try:
+                charge.montant = Decimal(str(data['montant']))
+            except Exception:
+                pass
+        
+        if 'date_paiement' in data and data['date_paiement']:
+            try:
+                charge.date_paiement = datetime.strptime(data['date_paiement'], '%Y-%m-%d').date()
+            except Exception:
+                pass
+        
+        if 'mode_paiement' in data:
+            charge.mode_paiement = data['mode_paiement'] or None
+        
+        if 'reference' in data:
+            charge.reference = data['reference'] or None
+        
+        if 'remarque' in data:
+            charge.remarque = data['remarque'] or None
+        
+        if 'contact' in data:
+            charge.contact = data['contact'] or None
+        
+        if 'formation_id' in data:
+            charge.formation_id = data['formation_id'] if data['formation_id'] else None
+        
+        # Handle attachment from FILES if any
+        if request.FILES.get('attachment'):
+            charge.attachment = request.FILES['attachment']
+        
+        charge.save()
+        
+        attachment_url = None
+        if getattr(charge, 'attachment', None):
+            attachment_url = request.build_absolute_uri(charge.attachment.url)
+        
+        charge_data = {
+            'id': charge.id,
+            'type_charge': charge.type_charge or '',
+            'montant': float(charge.montant or 0),
+            'date_paiement': charge.date_paiement.isoformat() if charge.date_paiement else None,
+            'mode_paiement': charge.mode_paiement or '',
+            'reference': charge.reference or '',
+            'remarque': charge.remarque or '',
+            'formation_id': charge.formation_id,
+            'formation_nom': charge.formation.nom if charge.formation else None,
+            'contact': charge.contact or '',
+            'attachment': attachment_url,
+        }
+        
+        return JsonResponse({'success': True, 'charge': charge_data})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@csrf_exempt
+@require_POST
+def api_charge_delete(request, pk):
+    """API endpoint: POST to delete a charge.
+    
+    Returns JSON: { success: True, deleted: int }
+    """
+    try:
+        charge = get_object_or_404(Charge, pk=pk)
+        charge_id = charge.id
+        charge.delete()
+        return JsonResponse({'success': True, 'deleted': charge_id})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@csrf_exempt
+def api_charges_stats(request):
+    """API endpoint: GET charges statistics for dashboard.
+    
+    Returns JSON: { success: True, stats: {...} }
+    """
+    try:
+        now = timezone.now()
+        
+        # Total charges
+        total_all = Charge.objects.aggregate(total=Sum('montant'))['total'] or 0
+        total_count = Charge.objects.count()
+        
+        # This month
+        month_charges = Charge.objects.filter(
+            date_paiement__year=now.year,
+            date_paiement__month=now.month
+        )
+        month_total = month_charges.aggregate(total=Sum('montant'))['total'] or 0
+        month_count = month_charges.count()
+        
+        # This year
+        year_charges = Charge.objects.filter(date_paiement__year=now.year)
+        year_total = year_charges.aggregate(total=Sum('montant'))['total'] or 0
+        year_count = year_charges.count()
+        
+        # Type distribution
+        type_distribution = list(
+            Charge.objects.values('type_charge')
+            .annotate(total=Sum('montant'), count=Count('id'))
+            .order_by('-total')[:10]
+        )
+        
+        # Monthly trend (last 6 months)
+        from django.db.models.functions import TruncMonth
+        monthly_trend = list(
+            Charge.objects.filter(date_paiement__gte=now - timezone.timedelta(days=180))
+            .annotate(month=TruncMonth('date_paiement'))
+            .values('month')
+            .annotate(total=Sum('montant'), count=Count('id'))
+            .order_by('month')
+        )
+        # Format dates for JSON
+        for item in monthly_trend:
+            if item.get('month'):
+                item['month'] = item['month'].strftime('%Y-%m')
+        
+        return JsonResponse({
+            'success': True,
+            'stats': {
+                'total_all': float(total_all),
+                'total_count': total_count,
+                'month_total': float(month_total),
+                'month_count': month_count,
+                'year_total': float(year_total),
+                'year_count': year_count,
+                'type_distribution': type_distribution,
+                'monthly_trend': monthly_trend,
+            }
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@csrf_exempt
+def api_charges_types(request):
+    """API endpoint: GET available charge types.
+    
+    Returns JSON: { success: True, types: [...] }
+    """
+    try:
+        # Return the main type choices from the ChargeForm
+        main_types = [
+            {'key': 'travaux', 'label': 'Travaux et entretien'},
+            {'key': 'amenagement', 'label': 'Aménagement'},
+            {'key': 'vehicule', 'label': 'Dépenses Véhicule'},
+            {'key': 'fiscales', 'label': 'Charges Fiscales'},
+            {'key': 'fonctionnement', 'label': 'Charge de fonctionnement'},
+            {'key': 'autres', 'label': 'Autres frais'},
+            {'key': 'abonnement', 'label': 'Charge abonnement'},
+        ]
+        
+        sub_types = {
+            'travaux': [
+                {'key': 'maconnerie', 'label': 'Maçonnerie'},
+                {'key': 'plomberie', 'label': 'Plomberie'},
+                {'key': 'carrelage', 'label': 'Carrelage et faïence'},
+                {'key': 'peinture', 'label': 'Peinture'},
+                {'key': 'courant_fort', 'label': 'Courant fort'},
+                {'key': 'courant_faible', 'label': 'Courant faible'},
+                {'key': 'menuiserie', 'label': 'Menuiserie générale'},
+                {'key': 'finitions', 'label': 'Finitions'},
+                {'key': 'soudeur', 'label': 'Soudeur'},
+                {'key': 'quincaillerie', 'label': 'Quincaillerie'},
+            ],
+            'amenagement': [
+                {'key': 'mobilier', 'label': 'Mobilier'},
+                {'key': 'materiel_equipement', 'label': 'Matériel et équipement'},
+            ],
+            'vehicule': [
+                {'key': 'carburant', 'label': 'Carburant'},
+                {'key': 'assurance', 'label': 'Assurance'},
+                {'key': 'entretien_mecanique', 'label': 'Entretien et mécanique'},
+            ],
+            'fiscales': [
+                {'key': 'impot', 'label': 'Impôt'},
+                {'key': 'cnas', 'label': 'CNAS'},
+                {'key': 'casnos', 'label': 'CASNOS'},
+                {'key': 'quittance_fiscale', 'label': 'Quittance fiscale'},
+            ],
+            'fonctionnement': [
+                {'key': 'fourniture_bureautique', 'label': 'Fourniture bureautique'},
+                {'key': 'impression_photocopie', 'label': 'Impression et photocopie'},
+                {'key': 'publicite', 'label': 'Publicité'},
+                {'key': 'loyer', 'label': 'Loyer'},
+                {'key': 'entretien_nettoyage', 'label': 'Entretien et nettoyage'},
+            ],
+            'autres': [
+                {'key': 'alimentation', 'label': 'Alimentations'},
+                {'key': 'cafe_restaurant', 'label': 'Café & Restaurant'},
+                {'key': 'voyage', 'label': 'Voyage'},
+                {'key': 'transport', 'label': 'Transport'},
+                {'key': 'divers', 'label': 'Divers'},
+            ],
+            'abonnement': [
+                {'key': 'facture_electricite', 'label': "Facture d'électricité"},
+                {'key': 'facture_gaz', 'label': 'Facture Gaz'},
+                {'key': 'facture_internet', 'label': 'Facture internet'},
+                {'key': 'facture_telephone', 'label': 'Facture téléphone'},
+                {'key': 'facture_TV', 'label': 'Facture TV'},
+            ],
+        }
+        
+        return JsonResponse({
+            'success': True,
+            'main_types': main_types,
+            'sub_types': sub_types,
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
 def paiements_view(request):
@@ -7852,3 +8334,607 @@ def student_formations_available(request):
 
 
 
+
+# ============================================
+# MOBILE API - FINANCES & PAIEMENTS
+# ============================================
+
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+from django.core.paginator import Paginator
+from django.db.models import Sum, Q
+from django.utils import timezone
+import json
+from datetime import datetime
+
+# Models are already imported in views.py usually, but ensuring:
+from .models import Paiement, Charge, ReglementEnseignants, SchoolVersement, Etudiant, Formation
+
+@csrf_exempt
+def api_finances_summary(request):
+    """
+    API Endpoint for Finances Summary (Mobile)
+    """
+    try:
+        # 1. Totals
+        paiements_total = Paiement.objects.aggregate(total=Sum('montant'))['total'] or 0
+        reglements_enseignants_total = ReglementEnseignants.objects.aggregate(total=Sum('montant'))['total'] or 0
+        try:
+            charges_total = Charge.objects.aggregate(total=Sum('montant'))['total'] or 0
+        except:
+            charges_total = 0
+            
+        try:
+            school_versements_total = SchoolVersement.objects.aggregate(total=Sum('montant'))['total'] or 0
+        except:
+            school_versements_total = 0
+
+        # 2. Calculations
+        tresorerie = (paiements_total + school_versements_total) - (charges_total + reglements_enseignants_total)
+        benefice_net = paiements_total + school_versements_total
+        
+        # 3. Monthly Stats (Current Month)
+        now = timezone.now()
+        month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        
+        paiements_month = Paiement.objects.filter(date_paiement__gte=month_start.date()).aggregate(total=Sum('montant'))['total'] or 0
+        charges_month = Charge.objects.filter(date_paiement__gte=month_start.date()).aggregate(total=Sum('montant'))['total'] or 0
+        
+        # 4. Top Formations (Revenue)
+        top_formations = []
+        try:
+            top_qs = list(Paiement.objects.values('formation__nom').annotate(total=Sum('montant')).order_by('-total')[:5])
+            total_rev = sum([x.get('total') or 0 for x in top_qs])
+            if total_rev > 0:
+                for item in top_qs:
+                    top_formations.append({
+                        'label': item.get('formation__nom') or 'Autre',
+                        'value': float(item.get('total') or 0),
+                        'percent': round((float(item.get('total') or 0) / float(paiements_total)) * 100, 1) if paiements_total else 0
+                    })
+        except:
+            pass
+
+        data = {
+            'success': True,
+            'stats': {
+                'solde_actuel': float(tresorerie),
+                'total_entrees': float(paiements_total + school_versements_total),
+                'total_sorties': float(charges_total + reglements_enseignants_total),
+                'charges_total': float(charges_total),
+                'benefice_net': float(benefice_net),
+            },
+            'month_stats': {
+                'entrees': float(paiements_month),
+                'sorties': float(charges_month),
+            },
+            'top_formations': top_formations
+        }
+        return JsonResponse(data)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@csrf_exempt
+def api_paiements_list(request):
+    """
+    API for listing payments with pagination and search
+    """
+    try:
+        page = int(request.GET.get('page', 1))
+        limit = int(request.GET.get('limit', 20))
+        search = request.GET.get('q', '').lower()
+        
+        qs = Paiement.objects.all().select_related('etudiant', 'formation').order_by('-date_paiement')
+        
+        if search:
+            qs = qs.filter(
+                Q(reference__icontains=search) | 
+                Q(etudiant__nom__icontains=search) |
+                Q(etudiant__prenom__icontains=search)
+            )
+            
+        total_count = qs.count()
+        paginator = Paginator(qs, limit)
+        current_page = paginator.get_page(page)
+        
+        paiements = []
+        for p in current_page:
+            paiements.append({
+                'id': p.id,
+                'reference': p.reference,
+                'etudiant_nom': f"{p.etudiant.prenom} {p.etudiant.nom}" if p.etudiant else "Inconnu",
+                'formation': p.formation.nom if p.formation else (p.ecole or "-"),
+                'montant': float(p.montant),
+                'date_paiement': p.date_paiement.isoformat() if p.date_paiement else None,
+                'mode_paiement': p.mode_paiement,
+                'remarques': p.remarques
+            })
+            
+        return JsonResponse({
+            'success': True,
+            'paiements': paiements,
+            'total': total_count,
+            'pages': paginator.num_pages,
+            'current_page': page
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@csrf_exempt
+def api_etudiants_simple(request):
+    """
+    Return simple list of students for dropdown
+    """
+    try:
+        search = request.GET.get('q', '')
+        qs = Etudiant.objects.all().values('id', 'nom', 'prenom', 'formation__nom', 'groupe__nom').order_by('nom')[:50]
+        
+        if search:
+            qs = Etudiant.objects.filter(
+                Q(nom__icontains=search) | Q(prenom__icontains=search)
+            ).values('id', 'nom', 'prenom', 'formation__nom', 'groupe__nom')[:50]
+            
+        etudiants = list(qs)
+        return JsonResponse({'success': True, 'etudiants': etudiants})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@csrf_exempt
+def api_paiement_create(request):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Method not allowed'}, status=405)
+        
+    try:
+        data = json.loads(request.body)
+        
+        # Basic validation
+        if not data.get('etudiant_id') or not data.get('montant'):
+            return JsonResponse({'success': False, 'error': 'Etudiant et montant requis'}, status=400)
+            
+        etudiant = Etudiant.objects.get(id=data['etudiant_id'])
+        
+        paiement = Paiement(
+            etudiant=etudiant,
+            montant=data['montant'],
+            date_paiement=data.get('date_paiement') or timezone.now().date(),
+            mode_paiement=data.get('mode_paiement', 'EspÃ¨ces'),
+            remarques=data.get('remarques', ''),
+            reference=data.get('reference') or f"PAY-{int(datetime.now().timestamp())}",
+            formation=etudiant.formation # Auto-link formation
+        )
+        paiement.save()
+        
+        return JsonResponse({
+            'success': True,
+            'paiement': {
+                'id': paiement.id,
+                'reference': paiement.reference,
+                'montant': float(paiement.montant),
+                'etudiant_nom': str(etudiant),
+                'date_paiement': paiement.date_paiement.isoformat()
+            }
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+@csrf_exempt
+def api_charges_list(request):
+    try:
+        page = int(request.GET.get('page', 1))
+        limit = int(request.GET.get('limit', 20))
+        search = request.GET.get('q', '').lower()
+        
+        qs = Charge.objects.all().order_by('-date_paiement')
+        if search:
+            qs = qs.filter(Q(type_charge__icontains=search) | Q(reference__icontains=search))
+            
+        total_count = qs.count()
+        paginator = Paginator(qs, limit)
+        current_page = paginator.get_page(page)
+        
+        charges = []
+        for c in current_page:
+            # Check for attachment
+            attachment_url = None
+            if getattr(c, 'attachment', None):
+                attachment_url = request.build_absolute_uri(c.attachment.url)
+            elif getattr(c, 'document', None): # Fallback to old field if any
+                attachment_url = request.build_absolute_uri(f"/media/{c.document}")
+
+            charges.append({
+                'id': c.id,
+                'type_charge': c.type_charge,
+                'montant': float(c.montant),
+                'date_paiement': c.date_paiement.isoformat() if c.date_paiement else None,
+                'reference': c.reference,
+                'remarque': c.remarque,
+                'attachment': attachment_url
+            })
+            
+        return JsonResponse({'success': True, 'charges': charges, 'total': total_count})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@csrf_exempt
+def api_charge_create(request):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Method not allowed'}, status=405)
+    try:
+        # Handle both JSON and multipart/form-data
+        if request.content_type == 'application/json':
+            data = json.loads(request.body)
+        else:
+            data = request.POST
+
+        charge = Charge(
+            type_charge=data.get('type_charge'),
+            montant=data.get('montant'),
+            date_paiement=data.get('date_paiement') or timezone.now().date(),
+            reference=data.get('reference'),
+            remarque=data.get('remarque'),
+            contact=data.get('contact')
+        )
+        
+        # Handle file upload
+        if 'attachment' in request.FILES:
+            charge.attachment = request.FILES['attachment']
+            
+        charge.save()
+        
+        attachment_url = None
+        if charge.attachment:
+            attachment_url = request.build_absolute_uri(charge.attachment.url)
+
+        return JsonResponse({
+            'success': True, 
+            'id': charge.id,
+            'attachment': attachment_url
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@csrf_exempt
+def api_charge_detail(request, pk):
+    try:
+        c = get_object_or_404(Charge, pk=pk)
+        attachment_url = None
+        if getattr(c, 'attachment', None):
+            attachment_url = c.attachment.url
+        return JsonResponse({
+            'success': True,
+            'charge': {
+                'id': c.id,
+                'type_charge': c.type_charge or '',
+                'montant': float(c.montant or 0),
+                'date_paiement': c.date_paiement.isoformat() if c.date_paiement else None,
+                'mode_paiement': c.mode_paiement or '',
+                'reference': c.reference or '',
+                'remarque': c.remarque or '',
+                'formation_id': c.formation_id,
+                'formation_nom': c.formation.nom if c.formation else None,
+                'contact': c.contact or '',
+                'attachment': attachment_url,
+            }
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def api_charge_update(request, pk):
+    """API endpoint to update an existing charge."""
+    try:
+        charge = get_object_or_404(Charge, pk=pk)
+        
+        # Parse request data
+        if request.content_type and 'application/json' in request.content_type:
+            try:
+                data = json.loads(request.body.decode('utf-8') or '{}')
+            except Exception:
+                data = {}
+        else:
+            data = request.POST.dict()
+
+        # Update fields if provided
+        if 'type_charge' in data and data['type_charge']:
+            charge.type_charge = data['type_charge'].strip()
+        
+        if 'montant' in data:
+            try:
+                charge.montant = Decimal(str(data['montant']))
+            except Exception:
+                pass
+        
+        if 'date_paiement' in data and data['date_paiement']:
+            try:
+                charge.date_paiement = datetime.strptime(data['date_paiement'], '%Y-%m-%d').date()
+            except Exception:
+                pass
+        
+        if 'mode_paiement' in data:
+            charge.mode_paiement = data['mode_paiement'] or None
+        
+        if 'reference' in data:
+            charge.reference = data['reference'] or None
+        
+        if 'remarque' in data:
+            charge.remarque = data['remarque'] or None
+            
+        if 'contact' in data:
+            charge.contact = data['contact'] or None
+        
+        if 'formation_id' in data:
+            charge.formation_id = data['formation_id'] if data['formation_id'] else None
+        
+        # Handle attachment from FILES if any
+        if request.FILES.get('attachment'):
+            charge.attachment = request.FILES['attachment']
+
+        charge.save()
+        
+        attachment_url = None
+        if getattr(charge, 'attachment', None):
+            # Return relative URL so frontend can prepend SERVER_URL
+            attachment_url = charge.attachment.url
+            
+        charge_data = {
+            'id': charge.id,
+            'type_charge': charge.type_charge or '',
+            'montant': float(charge.montant or 0),
+            'date_paiement': charge.date_paiement.isoformat() if charge.date_paiement else None,
+            'mode_paiement': charge.mode_paiement or '',
+            'reference': charge.reference or '',
+            'remarque': charge.remarque or '',
+            'formation_id': charge.formation_id,
+            'formation_nom': charge.formation.nom if charge.formation else None,
+            'contact': charge.contact or '',
+            'attachment': attachment_url,
+        }
+        
+        return JsonResponse({'success': True, 'charge': charge_data})
+
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@csrf_exempt
+
+def api_charges_stats(request):
+    try:
+        total = Charge.objects.aggregate(total=Sum('montant'))['total'] or 0
+        now = timezone.now()
+        month_start = now.replace(day=1)
+        month_total = Charge.objects.filter(date_paiement__gte=month_start.date()).aggregate(total=Sum('montant'))['total'] or 0
+        return JsonResponse({'success': True, 'total': float(total), 'month_total': float(month_total)})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@csrf_exempt
+def api_charges_types(request):
+    """API endpoint: GET available charge types with sub-types."""
+    try:
+        main_types = [
+            {'key': 'travaux', 'label': 'Travaux et entretien'},
+            {'key': 'amenagement', 'label': 'Aménagement'},
+            {'key': 'vehicule', 'label': 'Dépenses Véhicule'},
+            {'key': 'fiscales', 'label': 'Charges Fiscales'},
+            {'key': 'fonctionnement', 'label': 'Charge de fonctionnement'},
+            {'key': 'autres', 'label': 'Autres frais'},
+            {'key': 'abonnement', 'label': 'Charge abonnement'},
+        ]
+        
+        sub_types = {
+            'travaux': [
+                {'key': 'maconnerie', 'label': 'Maçonnerie'},
+                {'key': 'plomberie', 'label': 'Plomberie'},
+                {'key': 'carrelage', 'label': 'Carrelage et faïence'},
+                {'key': 'peinture', 'label': 'Peinture'},
+                {'key': 'courant_fort', 'label': 'Courant fort'},
+                {'key': 'courant_faible', 'label': 'Courant faible'},
+                {'key': 'menuiserie', 'label': 'Menuiserie générale'},
+                {'key': 'finitions', 'label': 'Finitions'},
+                {'key': 'soudeur', 'label': 'Soudeur'},
+                {'key': 'quincaillerie', 'label': 'Quincaillerie'},
+            ],
+            'amenagement': [
+                {'key': 'mobilier', 'label': 'Mobilier'},
+                {'key': 'materiel_equipement', 'label': 'Matériel et équipement'},
+            ],
+            'vehicule': [
+                {'key': 'carburant', 'label': 'Carburant'},
+                {'key': 'assurance', 'label': 'Assurance'},
+                {'key': 'entretien_mecanique', 'label': 'Entretien et mécanique'},
+            ],
+            'fiscales': [
+                {'key': 'impot', 'label': 'Impôt'},
+                {'key': 'cnas', 'label': 'CNAS'},
+                {'key': 'casnos', 'label': 'CASNOS'},
+                {'key': 'quittance_fiscale', 'label': 'Quittance fiscale'},
+            ],
+            'fonctionnement': [
+                {'key': 'fourniture_bureautique', 'label': 'Fourniture bureautique'},
+                {'key': 'impression_photocopie', 'label': 'Impression et photocopie'},
+                {'key': 'publicite', 'label': 'Publicité'},
+                {'key': 'loyer', 'label': 'Loyer'},
+                {'key': 'entretien_nettoyage', 'label': 'Entretien et nettoyage'},
+            ],
+            'autres': [
+                {'key': 'alimentation', 'label': 'Alimentations'},
+                {'key': 'cafe_restaurant', 'label': 'Café & Restaurant'},
+                {'key': 'voyage', 'label': 'Voyage'},
+                {'key': 'transport', 'label': 'Transport'},
+                {'key': 'divers', 'label': 'Divers'},
+            ],
+            'abonnement': [
+                {'key': 'facture_electricite', 'label': "Facture d'électricité"},
+                {'key': 'facture_gaz', 'label': 'Facture Gaz'},
+                {'key': 'facture_internet', 'label': 'Facture internet'},
+                {'key': 'facture_telephone', 'label': 'Facture téléphone'},
+                {'key': 'facture_TV', 'label': 'Facture TV'},
+            ],
+        }
+        
+        return JsonResponse({
+            'success': True,
+            'main_types': main_types,
+            'sub_types': sub_types,
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@csrf_exempt
+def api_paiement_update(request, pk):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Method not allowed'}, status=405)
+    try:
+        data = json.loads(request.body)
+        paiement = get_object_or_404(Paiement, pk=pk)
+        if data.get('etudiant_id'):
+            paiement.etudiant = get_object_or_404(Etudiant, pk=data['etudiant_id'])
+        paiement.montant = data.get('montant', paiement.montant)
+        paiement.date_paiement = data.get('date_paiement', paiement.date_paiement)
+        paiement.mode_paiement = data.get('mode_paiement', paiement.mode_paiement)
+        paiement.remarques = data.get('remarques', paiement.remarques)
+        paiement.save()
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@csrf_exempt
+def api_paiement_delete(request, pk):
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Method not allowed'}, status=405)
+    try:
+        paiement = get_object_or_404(Paiement, pk=pk)
+        paiement.delete()
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@csrf_exempt
+def api_mobile_ecoles_list(request):
+    """
+    API Version of ecole_paiements_view logic.
+    Returns list of external schools with financial summary.
+    """
+    try:
+        from collections import defaultdict
+        ecoles = defaultdict(float)
+        ecoles_counts = defaultdict(int)
+        
+        # 1. Calculate Theoretical Shares
+        ins_qs = Inscription.objects.select_related('formation').filter(ecole__isnull=False).exclude(ecole__exact='').all()
+        for ins in ins_qs:
+            try:
+                ecole_name = (ins.ecole or '').strip()
+                if not ecole_name: continue
+                if 'genie' in ecole_name.lower() and 'system' in ecole_name.lower(): continue
+                
+                base = 0.0
+                if getattr(ins, 'prix_total', None) is not None:
+                    base = float(ins.prix_total or 0)
+                elif getattr(ins, 'formation', None) and getattr(ins.formation, 'prix_etudiant', None) is not None:
+                    base = float(ins.formation.prix_etudiant or 0)
+
+                fname = (getattr(ins.formation, 'nom', '') or '').lower() if getattr(ins, 'formation', None) else ''
+                deducted = 0.0
+                if 'fibre' in fname:
+                    if ecole_name.lower() == 'jura school': deducted = 4500.0
+                    else: deducted = 3000.0
+                elif 'reseau' in fname or 'camera' in fname or 'caméra' in fname:
+                    deducted = 2000.0
+
+                remaining = max(0.0, base - deducted)
+                school_share = (remaining / 2.0) + deducted
+                ecoles[ecole_name] += school_share
+                ecoles_counts[ecole_name] += 1
+            except Exception:
+                continue
+
+        # 2. Subtract Payments (Paiement + SchoolVersement)
+        ecoles_summary = dict(ecoles)
+        final_list = []
+        
+        for ename in list(ecoles_summary.keys()):
+            try:
+                paid_paiements = Paiement.objects.filter(ecole__iexact=ename).aggregate(total=Sum('montant'))['total'] or 0
+                paid_school = 0
+                try:
+                    paid_school = SchoolVersement.objects.filter(ecole__iexact=ename).aggregate(total=Sum('montant'))['total'] or 0
+                except: pass
+                
+                paid_total = (paid_paiements or 0) + (paid_school or 0)
+                remaining_due = max(0.0, ecoles_summary.get(ename, 0.0) - float(paid_total))
+                
+                final_list.append({
+                    'name': ename,
+                    'count': ecoles_counts.get(ename, 0),
+                    'total_share': float(format(ecoles_summary.get(ename, 0), '.2f')),
+                    'paid': float(format(paid_total, '.2f')),
+                    'remaining': float(format(remaining_due, '.2f'))
+                })
+            except: continue
+        
+        # Sort by remaining desc
+        final_list.sort(key=lambda x: x['remaining'], reverse=True)
+            
+        return JsonResponse({'success': True, 'ecoles': final_list})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@csrf_exempt
+def api_mobile_ecole_detail(request):
+    """
+    Get students and history for a specific school. 
+    Query: ?name=SchoolName
+    """
+    try:
+        selected = request.GET.get('name')
+        if not selected: return JsonResponse({'success': False, 'error': 'Missing name param'}, status=400)
+        
+        students = []
+        sel_qs = Inscription.objects.select_related('formation', 'etudiant').filter(ecole__iexact=selected)
+        
+        for ins in sel_qs:
+            try:
+                base = 0.0
+                if getattr(ins, 'prix_total', None) is not None:
+                    base = float(ins.prix_total or 0)
+                elif getattr(ins, 'formation', None) and getattr(ins.formation, 'prix_etudiant', None) is not None:
+                    base = float(ins.formation.prix_etudiant or 0)
+                    
+                fname = (getattr(ins.formation, 'nom', '') or '').lower() if getattr(ins, 'formation', None) else ''
+                deducted = 0.0
+                if 'fibre' in fname:
+                    if selected.lower() == 'jura school': deducted = 4500.0
+                    else: deducted = 3000.0
+                elif 'reseau' in fname or 'camera' in fname or 'caméra' in fname:
+                    deducted = 2000.0
+                    
+                remaining = max(0.0, base - deducted)
+                share = (remaining / 2.0) + deducted
+                
+                students.append({
+                    'id': ins.id,
+                    'name': f"{getattr(ins.etudiant,'prenom','')} {getattr(ins.etudiant,'nom','')}",
+                    'formation': getattr(ins.formation, 'nom', ''),
+                    'share': round(share, 2)
+                })
+            except: continue
+            
+        # Versements history
+        history = []
+        try:
+            svs = SchoolVersement.objects.filter(ecole__iexact=selected).order_by('-date_versement')[:20]
+            for s in svs:
+                history.append({
+                    'id': s.id,
+                    'type': 'versement',
+                    'date': s.date_versement.isoformat(),
+                    'amount': float(s.montant),
+                    'note': s.note or ''
+                })
+        except: pass
+        
+        return JsonResponse({'success': True, 'students': students, 'history': history})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)

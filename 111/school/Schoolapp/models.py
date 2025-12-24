@@ -419,7 +419,7 @@ class CalendarEvent(models.Model):
     formateur_name = models.CharField(max_length=255, null=True, blank=True)
     notifications_sent = models.BooleanField(default=False)
     groupe = models.CharField(max_length=100, null=True, blank=True)  # Newly added field
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     class Meta:
         db_table = 'calendar_event'
@@ -596,6 +596,8 @@ class Charge(models.Model):
 	formation = models.ForeignKey('Formation', null=True, blank=True, on_delete=models.SET_NULL, db_column='formation_id', related_name='charges')
 	# contact phone or identifier (added to DB via ALTER TABLE as requested)
 	contact = models.CharField(max_length=20, null=True, blank=True)
+	# attachment for documents or photos
+	attachment = models.FileField(upload_to='charges_attachments/', null=True, blank=True)
 
 	class Meta:
 		db_table = 'charges'

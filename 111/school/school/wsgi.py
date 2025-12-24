@@ -55,15 +55,15 @@ wsgi_logger.info("=" * 60)
 try:
 	from django.core.wsgi import get_wsgi_application
 	_django_app = get_wsgi_application()
-	wsgi_logger.info("✓ Django WSGI application loaded successfully")
-	print('✓ Django WSGI application loaded successfully', flush=True)
+	wsgi_logger.info("[OK] Django WSGI application loaded successfully")
+	print('[OK] Django WSGI application loaded successfully', flush=True)
 	
 	# Warm up database connection pool on first worker initialization
 	# Skip this to avoid connection issues at startup - connections will be made on first request
 	wsgi_logger.info("Skipping database warmup - connections will be established on first request")
 except Exception as e:
-	wsgi_logger.error(f"✗ Failed to load Django: {e}", exc_info=True)
-	print(f'✗ Failed to load Django: {e}', flush=True)
+	wsgi_logger.error(f"[FAIL] Failed to load Django: {e}", exc_info=True)
+	print(f'[FAIL] Failed to load Django: {e}', flush=True)
 	import traceback
 	_error_traceback = traceback.format_exc()
 	traceback.print_exc()
@@ -112,7 +112,7 @@ def application(environ, start_response):
 		return result
 	except Exception as e:
 		wsgi_logger.exception(f"[ERROR] Request failed for {path_info}: {e}")
-		print(f'✗ Request error: {e}', flush=True)
+		print(f'[ERROR] Request error: {e}', flush=True)
 		import traceback
 		error_trace = traceback.format_exc()
 		print(error_trace, flush=True)

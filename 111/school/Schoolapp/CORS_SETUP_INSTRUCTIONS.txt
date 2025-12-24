@@ -1,0 +1,22 @@
+# ============================================
+# CORS Configuration for Mobile App
+# ============================================
+# Add this to your Django settings.py MIDDLEWARE list
+# Place it at the TOP of the list (before any other middleware)
+
+# MIDDLEWARE = [
+#     'Schoolapp.cors_middleware.CORSMiddleware',  # <-- ADD THIS LINE FIRST
+#     'django.middleware.security.SecurityMiddleware',
+#     ...rest of your middleware...
+# ]
+
+# ============================================
+# QUICK INSTRUCTIONS:
+# ============================================
+# 1. Open school/settings.py
+# 2. Find the MIDDLEWARE list (should be around line 40-60)
+# 3. Add this line at the VERY TOP of the MIDDLEWARE list:
+#    'Schoolapp.cors_middleware.CORSMiddleware',
+# 4. Restart the Django server
+# 5. Refresh the mobile app at http://localhost:3000
+# ============================================

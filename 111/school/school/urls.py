@@ -65,6 +65,24 @@ urlpatterns = [
   path('finances/charges/chat-ai/', views.charge_ai_chat, name='charges_chat_ai'),
   path('finances/charges/<int:pk>/edit/', views.charge_edit, name='charges_edit'),
   path('finances/charges/<int:pk>/delete/', views.charge_delete, name='charges_delete'),
+  # Mobile API for Charges
+  path('api/mobile/charges/all/', views.api_charges_all, name='api_charges_all'),
+  path('api/mobile/charges/', views.api_charges_list, name='api_charges_list'),
+  path('api/mobile/charges/stats/', views.api_charges_stats, name='api_charges_stats'),
+  path('api/mobile/charges/types/', views.api_charges_types, name='api_charges_types'),
+  path('api/mobile/charges/create/', views.api_charge_create, name='api_charge_create'),
+  path('api/mobile/charges/<int:pk>/', views.api_charge_detail, name='api_charge_detail'),
+  path('api/mobile/charges/<int:pk>/update/', views.api_charge_update, name='api_charge_update'),
+  path('api/mobile/charges/<int:pk>/delete/', views.api_charge_delete, name='api_charge_delete'),
+
+  # Mobile API for Finances
+  path('api/mobile/finances/summary/', views.api_finances_summary, name='api_finances_summary'),
+  path('api/mobile/paiements/', views.api_paiements_list, name='api_paiements_list'),
+  path('api/mobile/paiements/create/', views.api_paiement_create, name='api_paiement_create'),
+  path('api/mobile/etudiants/', views.api_etudiants_simple, name='api_etudiants_simple'),
+
+  path('api/mobile/ecoles/', views.api_mobile_ecoles_list, name='api_mobile_ecoles_list'),
+  path('api/mobile/ecoles/detail/', views.api_mobile_ecole_detail, name='api_mobile_ecole_detail'),
     path('paiements/', views.paiements_view, name='paiements'),
     path('paiements/add/', views.add_paiement, name='paiements_add'),
   path('paiements/edit/', views.edit_paiement, name='paiements_edit'),
@@ -141,5 +159,5 @@ urlpatterns = [
 
 
 
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# Always serve media files (for local development)
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
