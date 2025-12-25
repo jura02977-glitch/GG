@@ -1,11 +1,14 @@
 ﻿from django.contrib import admin
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, re_path
 from Schoolapp import views
 from Schoolapp import test_views
 from Schoolapp.health_views import health_check, status_view
 from django.conf import settings
 from django.conf.urls.static import static
+from django.http import FileResponse, Http404
+from django.views.static import serve
+import os
 
 
 
@@ -156,8 +159,8 @@ urlpatterns = [
 
 ]
 
-
-
-
-# Always serve media files (for local development)
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# Serve media files in production (using Django's static serve view)
+# This works even when DEBUG=False
+urlpatterns += [
+    re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
+]
