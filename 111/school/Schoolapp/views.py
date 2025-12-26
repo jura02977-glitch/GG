@@ -8558,6 +8558,11 @@ def api_charges_list(request):
             date_paiement__month=now.month
         ).aggregate(total=Sum('montant'))['total'] or 0
         
+        # Day total (today)
+        day_total = Charge.objects.filter(
+            date_paiement=now.date()
+        ).aggregate(total=Sum('montant'))['total'] or 0
+        
         # Type distribution for chart/categories
         type_stats = Charge.objects.values('type_charge').annotate(
             total=Sum('montant'),
@@ -8571,6 +8576,7 @@ def api_charges_list(request):
             'stats': {
                 'total_all': float(total_all),
                 'month_total': float(month_total),
+                'day_total': float(day_total),
                 'count': total_count,
                 'type_distribution': list(type_stats)
             }
@@ -8601,6 +8607,28 @@ def api_charge_create(request):
         # Handle file upload
         if 'attachment' in request.FILES:
             charge.attachment = request.FILES['attachment']
+        elif data.get('attachment_url'):
+            # Handle already uploaded file (from temp upload)
+            import os
+            import shutil
+            from django.conf import settings
+            
+            attachment_url = data.get('attachment_url')
+            # Extract filename from URL
+            if '/temp_uploads/' in attachment_url:
+                filename = attachment_url.split('/temp_uploads/')[-1].split('?')[0]
+                temp_path = os.path.join(settings.MEDIA_ROOT, 'temp_uploads', filename)
+                
+                if os.path.exists(temp_path):
+                    # Move file to charges directory
+                    charges_dir = os.path.join(settings.MEDIA_ROOT, 'charges')
+                    os.makedirs(charges_dir, exist_ok=True)
+                    
+                    new_filename = f"charge_{timezone.now().strftime('%Y%m%d%H%M%S')}_{filename.split('_', 2)[-1]}"
+                    new_path = os.path.join(charges_dir, new_filename)
+                    shutil.move(temp_path, new_path)
+                    
+                    charge.attachment = f"charges/{new_filename}"
             
         charge.save()
         
@@ -8612,6 +8640,49 @@ def api_charge_create(request):
             'success': True, 
             'id': charge.id,
             'attachment': attachment_url
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@csrf_exempt
+def api_upload_temp(request):
+    """Temporary upload endpoint for immediate file upload with progress"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Method not allowed'}, status=405)
+    try:
+        if 'attachment' not in request.FILES:
+            return JsonResponse({'success': False, 'error': 'No file provided'}, status=400)
+        
+        uploaded_file = request.FILES['attachment']
+        
+        # Save to a temporary location (or could save to TempUpload model)
+        import os
+        import uuid
+        from django.conf import settings
+        
+        # Generate unique filename
+        ext = os.path.splitext(uploaded_file.name)[1]
+        unique_name = f"temp_{uuid.uuid4().hex}{ext}"
+        
+        # Ensure temp directory exists
+        temp_dir = os.path.join(settings.MEDIA_ROOT, 'temp_uploads')
+        os.makedirs(temp_dir, exist_ok=True)
+        
+        # Save file
+        file_path = os.path.join(temp_dir, unique_name)
+        with open(file_path, 'wb+') as destination:
+            for chunk in uploaded_file.chunks():
+                destination.write(chunk)
+        
+        # Return URL
+        attachment_url = request.build_absolute_uri(f'/media/temp_uploads/{unique_name}')
+        
+        return JsonResponse({
+            'success': True,
+            'filename': unique_name,
+            'original_name': uploaded_file.name,
+            'attachment': attachment_url,
+            'size': uploaded_file.size
         })
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)

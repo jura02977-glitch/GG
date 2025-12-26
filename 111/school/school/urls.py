@@ -77,6 +77,7 @@ urlpatterns = [
   path('api/mobile/charges/<int:pk>/', views.api_charge_detail, name='api_charge_detail'),
   path('api/mobile/charges/<int:pk>/update/', views.api_charge_update, name='api_charge_update'),
   path('api/mobile/charges/<int:pk>/delete/', views.api_charge_delete, name='api_charge_delete'),
+  path('api/mobile/upload-temp/', views.api_upload_temp, name='api_upload_temp'),
 
   # Mobile API for Finances
   path('api/mobile/finances/summary/', views.api_finances_summary, name='api_finances_summary'),
