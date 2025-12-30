@@ -6344,13 +6344,12 @@ def api_charge_create(request):
         
         # Create charge
         # Get fournisseur and nom_contact, handling empty strings
-        # QueryDict.get() returns the value or empty string, so we need to check if it exists
         fournisseur_raw = data.get('fournisseur', '')
         nom_contact_raw = data.get('nom_contact', '')
         
-        # Convert to string and strip, then use None if empty
-        fournisseur_val = str(fournisseur_raw).strip() if fournisseur_raw else ''
-        nom_contact_val = str(nom_contact_raw).strip() if nom_contact_raw else ''
+        # Convert to string, strip whitespace, and use None if empty
+        fournisseur_val = str(fournisseur_raw).strip() if fournisseur_raw and str(fournisseur_raw).strip() else None
+        nom_contact_val = str(nom_contact_raw).strip() if nom_contact_raw and str(nom_contact_raw).strip() else None
         
         charge = Charge.objects.create(
             type_charge=type_charge,
@@ -6360,8 +6359,8 @@ def api_charge_create(request):
             reference=data.get('reference', '') or None,
             remarque=data.get('remarque', '') or None,
             contact=data.get('contact', '') or None,
-            fournisseur=fournisseur_val or None,
-            nom_contact=nom_contact_val or None,
+            fournisseur=fournisseur_val,
+            nom_contact=nom_contact_val,
             formation_id=data.get('formation_id') if data.get('formation_id') else None,
         )
 
