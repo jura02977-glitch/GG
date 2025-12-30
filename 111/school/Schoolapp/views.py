@@ -6343,6 +6343,10 @@ def api_charge_create(request):
             date_paiement = date.today()
         
         # Create charge
+        # Get fournisseur and nom_contact, handling empty strings
+        fournisseur_val = data.get('fournisseur', '').strip() if data.get('fournisseur') else ''
+        nom_contact_val = data.get('nom_contact', '').strip() if data.get('nom_contact') else ''
+        
         charge = Charge.objects.create(
             type_charge=type_charge,
             montant=montant,
@@ -6351,8 +6355,8 @@ def api_charge_create(request):
             reference=data.get('reference', '') or None,
             remarque=data.get('remarque', '') or None,
             contact=data.get('contact', '') or None,
-            fournisseur=data.get('fournisseur', '') or None,
-            nom_contact=data.get('nom_contact', '') or None,
+            fournisseur=fournisseur_val or None,
+            nom_contact=nom_contact_val or None,
             formation_id=data.get('formation_id') if data.get('formation_id') else None,
         )
 
@@ -6360,10 +6364,33 @@ def api_charge_create(request):
         if request.FILES.get('attachment'):
             charge.attachment = request.FILES['attachment']
             charge.save()
+        elif data.get('attachment_url'):
+            # Handle already uploaded file (from temp upload)
+            import os
+            import shutil
+            from django.conf import settings
+            
+            attachment_url = data.get('attachment_url')
+            # Extract filename from URL
+            if '/temp_uploads/' in attachment_url:
+                filename = attachment_url.split('/temp_uploads/')[-1].split('?')[0]
+                temp_path = os.path.join(settings.MEDIA_ROOT, 'temp_uploads', filename)
+                
+                if os.path.exists(temp_path):
+                    # Move file to charges directory
+                    charges_dir = os.path.join(settings.MEDIA_ROOT, 'charges')
+                    os.makedirs(charges_dir, exist_ok=True)
+                    
+                    new_filename = f"charge_{timezone.now().strftime('%Y%m%d%H%M%S')}_{filename.split('_', 2)[-1] if '_' in filename else filename}"
+                    new_path = os.path.join(charges_dir, new_filename)
+                    shutil.move(temp_path, new_path)
+                    
+                    charge.attachment = f"charges/{new_filename}"
+                    charge.save()
             
         attachment_url = None
         if getattr(charge, 'attachment', None):
-            attachment_url = charge.attachment.url
+            attachment_url = request.build_absolute_uri(charge.attachment.url) if hasattr(charge.attachment, 'url') else None
 
         charge_data = {
             'id': charge.id,
@@ -8604,67 +8631,7 @@ def api_charges_list(request):
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
-@csrf_exempt
-def api_charge_create(request):
-    if request.method != 'POST':
-        return JsonResponse({'success': False, 'error': 'Method not allowed'}, status=405)
-    try:
-        # Handle both JSON and multipart/form-data
-        if request.content_type == 'application/json':
-            data = json.loads(request.body)
-        else:
-            data = request.POST
-
-        charge = Charge(
-            type_charge=data.get('type_charge'),
-            montant=data.get('montant'),
-            date_paiement=data.get('date_paiement') or timezone.now().date(),
-            reference=data.get('reference'),
-            remarque=data.get('remarque'),
-            contact=data.get('contact'),
-            fournisseur=data.get('fournisseur') or None,
-            nom_contact=data.get('nom_contact') or None
-        )
-        
-        # Handle file upload
-        if 'attachment' in request.FILES:
-            charge.attachment = request.FILES['attachment']
-        elif data.get('attachment_url'):
-            # Handle already uploaded file (from temp upload)
-            import os
-            import shutil
-            from django.conf import settings
-            
-            attachment_url = data.get('attachment_url')
-            # Extract filename from URL
-            if '/temp_uploads/' in attachment_url:
-                filename = attachment_url.split('/temp_uploads/')[-1].split('?')[0]
-                temp_path = os.path.join(settings.MEDIA_ROOT, 'temp_uploads', filename)
-                
-                if os.path.exists(temp_path):
-                    # Move file to charges directory
-                    charges_dir = os.path.join(settings.MEDIA_ROOT, 'charges')
-                    os.makedirs(charges_dir, exist_ok=True)
-                    
-                    new_filename = f"charge_{timezone.now().strftime('%Y%m%d%H%M%S')}_{filename.split('_', 2)[-1]}"
-                    new_path = os.path.join(charges_dir, new_filename)
-                    shutil.move(temp_path, new_path)
-                    
-                    charge.attachment = f"charges/{new_filename}"
-            
-        charge.save()
-        
-        attachment_url = None
-        if charge.attachment:
-            attachment_url = request.build_absolute_uri(charge.attachment.url)
-
-        return JsonResponse({
-            'success': True, 
-            'id': charge.id,
-            'attachment': attachment_url
-        })
-    except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+# Removed duplicate api_charge_create function - using the one at line 6296 instead
 
 @csrf_exempt
 def api_upload_temp(request):
