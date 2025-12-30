@@ -2733,3 +2733,109 @@ django.db.utils.OperationalError: (1050, "Table 'groupe' already exists")
 [INFO] 2025-12-24 22:56:10 wsgi <module>:53 - ============================================================
 [INFO] 2025-12-24 22:56:10 wsgi <module>:58 - [OK] Django WSGI application loaded successfully
 [INFO] 2025-12-24 22:56:10 wsgi <module>:63 - Skipping database warmup - connections will be established on first request
+[ERROR] 2025-12-30 17:48:47 manage main:29 - Command execution failed: (2002, "Can't connect to server on 'localhost' (10061)")
+Traceback (most recent call last):
+  File "C:\Users\derin\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\backends\base\base.py", line 279, in ensure_connection
+    self.connect()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\derin\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "C:\Users\derin\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\backends\base\base.py", line 256, in connect
+    self.connection = self.get_new_connection(conn_params)
+                      ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\derin\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "C:\Users\derin\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\backends\mysql\base.py", line 258, in get_new_connection
+    connection = Database.connect(**conn_params)
+  File "C:\Users\derin\AppData\Local\Programs\Python\Python313\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Users\derin\AppData\Local\Programs\Python\Python313\Lib\site-packages\MySQLdb\connections.py", line 200, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+MySQLdb.OperationalError: (2002, "Can't connect to server on 'localhost' (10061)")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\derin\Downloads\Compressed\GSS-master_2\GSS-master\111\school\manage.py", line 27, in main
+    execute_from_command_line(sys.argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\derin\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\management\__init__.py", line 443, in execute_from_command_line
+    utility.execute()
+    ~~~~~~~~~~~~~~~^^
+  File "C:\Users\derin\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\management\__init__.py", line 437, in execute
+    self.fetch_command(subcommand).run_from_argv(self.argv)
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^
+  File "C:\Users\derin\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\management\base.py", line 416, in run_from_argv
+    self.execute(*args, **cmd_options)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\derin\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\management\base.py", line 457, in execute
+    self.check(**check_kwargs)
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "C:\Users\derin\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\management\base.py", line 492, in check
+    all_issues = checks.run_checks(
+        app_configs=app_configs,
+    ...<2 lines>...
+        databases=databases,
+    )
+  File "C:\Users\derin\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\checks\registry.py", line 89, in run_checks
+    new_errors = check(app_configs=app_configs, databases=databases)
+  File "C:\Users\derin\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\core\checks\database.py", line 13, in check_database_backends
+    issues.extend(conn.validation.check(**kwargs))
+                  ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\derin\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\backends\mysql\validation.py", line 9, in check
+    issues.extend(self._check_sql_mode(**kwargs))
+                  ~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\derin\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\backends\mysql\validation.py", line 14, in _check_sql_mode
+    self.connection.sql_mode & {"STRICT_TRANS_TABLES", "STRICT_ALL_TABLES"}
+    ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\derin\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\utils\functional.py", line 47, in __get__
+    res = instance.__dict__[self.name] = self.func(instance)
+                                         ~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\derin\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\backends\mysql\base.py", line 444, in sql_mode
+    sql_mode = self.mysql_server_data["sql_mode"]
+               ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\derin\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\utils\functional.py", line 47, in __get__
+    res = instance.__dict__[self.name] = self.func(instance)
+                                         ~~~~~~~~~^^^^^^^^^^
+  File "C:\Users\derin\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\backends\mysql\base.py", line 400, in mysql_server_data
+    with self.temporary_connection() as cursor:
+         ~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\derin\AppData\Local\Programs\Python\Python313\Lib\contextlib.py", line 141, in __enter__
+    return next(self.gen)
+  File "C:\Users\derin\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\backends\base\base.py", line 695, in temporary_connection
+    with self.cursor() as cursor:
+         ~~~~~~~~~~~^^
+  File "C:\Users\derin\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "C:\Users\derin\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\backends\base\base.py", line 320, in cursor
+    return self._cursor()
+           ~~~~~~~~~~~~^^
+  File "C:\Users\derin\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\backends\base\base.py", line 296, in _cursor
+    self.ensure_connection()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\derin\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "C:\Users\derin\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\backends\base\base.py", line 278, in ensure_connection
+    with self.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\derin\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\utils.py", line 94, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\derin\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\backends\base\base.py", line 279, in ensure_connection
+    self.connect()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\derin\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "C:\Users\derin\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\backends\base\base.py", line 256, in connect
+    self.connection = self.get_new_connection(conn_params)
+                      ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\derin\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "C:\Users\derin\AppData\Local\Programs\Python\Python313\Lib\site-packages\django\db\backends\mysql\base.py", line 258, in get_new_connection
+    connection = Database.connect(**conn_params)
+  File "C:\Users\derin\AppData\Local\Programs\Python\Python313\Lib\site-packages\MySQLdb\__init__.py", line 121, in Connect
+    return Connection(*args, **kwargs)
+  File "C:\Users\derin\AppData\Local\Programs\Python\Python313\Lib\site-packages\MySQLdb\connections.py", line 200, in __init__
+    super().__init__(*args, **kwargs2)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+django.db.utils.OperationalError: (2002, "Can't connect to server on 'localhost' (10061)")

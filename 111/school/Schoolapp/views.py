@@ -8700,6 +8700,8 @@ def api_charge_detail(request, pk):
                 'formation_id': c.formation_id,
                 'formation_nom': c.formation.nom if c.formation else None,
                 'contact': c.contact or '',
+                'fournisseur': c.fournisseur or '',
+                'nom_contact': c.nom_contact or '',
                 'attachment': attachment_url,
             }
         })
