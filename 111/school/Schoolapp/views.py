@@ -6558,6 +6558,7 @@ def api_charges_stats(request):
         from django.db.models.functions import TruncMonth, TruncWeek, TruncDate, ExtractWeekDay
         from django.db.models import Max, Min, Avg
         from collections import defaultdict
+        from datetime import timedelta
         import calendar
         
         now = timezone.now()
@@ -6573,7 +6574,7 @@ def api_charges_stats(request):
         today_count = today_charges.count()
         
         # This week (Monday to Sunday)
-        week_start = today - timezone.timedelta(days=today.weekday())
+        week_start = today - timedelta(days=today.weekday())
         week_charges = Charge.objects.filter(date_paiement__gte=week_start, date_paiement__lte=today)
         week_total = week_charges.aggregate(total=Sum('montant'))['total'] or 0
         week_count = week_charges.count()
@@ -6671,7 +6672,7 @@ def api_charges_stats(request):
         
         # ============ MONTHLY TREND (12 months) ============
         monthly_trend = list(
-            Charge.objects.filter(date_paiement__gte=now - timezone.timedelta(days=365))
+            Charge.objects.filter(date_paiement__gte=now - timedelta(days=365))
             .annotate(month=TruncMonth('date_paiement'))
             .values('month')
             .annotate(total=Sum('montant'), count=Count('id'))
@@ -6686,7 +6687,7 @@ def api_charges_stats(request):
         
         # ============ WEEKLY TREND (last 8 weeks) ============
         weekly_trend = list(
-            Charge.objects.filter(date_paiement__gte=now - timezone.timedelta(days=56))
+            Charge.objects.filter(date_paiement__gte=now - timedelta(days=56))
             .annotate(week=TruncWeek('date_paiement'))
             .values('week')
             .annotate(total=Sum('montant'), count=Count('id'))
@@ -6699,7 +6700,7 @@ def api_charges_stats(request):
         
         # ============ DAILY DISTRIBUTION (last 30 days) ============
         daily_distribution = list(
-            Charge.objects.filter(date_paiement__gte=now - timezone.timedelta(days=30))
+            Charge.objects.filter(date_paiement__gte=now - timedelta(days=30))
             .annotate(day=TruncDate('date_paiement'))
             .values('day')
             .annotate(total=Sum('montant'), count=Count('id'))
@@ -6745,7 +6746,7 @@ def api_charges_stats(request):
         # ============ AVERAGES & INSIGHTS ============
         # Average per day (last 30 days)
         days_with_charges = Charge.objects.filter(
-            date_paiement__gte=now - timezone.timedelta(days=30)
+            date_paiement__gte=now - timedelta(days=30)
         ).values('date_paiement').distinct().count()
         avg_per_day = float(month_total) / max(days_with_charges, 1)
         
