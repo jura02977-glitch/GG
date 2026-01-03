@@ -6609,6 +6609,7 @@ def api_charges_stats(request):
 @csrf_exempt
 def api_charges_types(request):
     """API endpoint: GET available charge types.
+    # Force redeploy update categories
     
     Returns JSON: { success: True, types: [...] }
     """
