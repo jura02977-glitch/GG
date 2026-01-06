@@ -1,238 +1,355 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GénieSchool - Connexion</title>
     {% load static %}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
         * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-        }
-
-        html, body {
-            height: 100%;
-            width: 100%;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
 
         body {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 50%, #a5d6a7 100%);
             display: flex;
-            align-items: center;
             justify-content: center;
-            padding: 20px;
+            align-items: center;
+            flex-direction: column;
+            font-family: 'Montserrat', sans-serif;
             min-height: 100vh;
+            padding: 20px;
         }
 
-        .auth-container {
-            width: 100%;
-            max-width: 420px;
+        h1 {
+            font-weight: 800;
+            margin: 0 0 15px 0;
+            font-size: 1.8rem;
+            color: #1b5e20;
         }
 
-        /* Tabs */
-        .tab-buttons {
-            display: flex;
-            gap: 0;
-            margin-bottom: 0;
-            border-radius: 16px 16px 0 0;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        }
-
-        .tab-button {
-            flex: 1;
-            padding: 16px;
-            border: none;
-            background: rgba(255, 255, 255, 0.3);
-            color: white;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .tab-button.active {
-            background: white;
-            color: #667eea;
-        }
-
-        .tab-button:hover {
-            background: rgba(255, 255, 255, 0.4);
-        }
-
-        .tab-button.active:hover {
-            background: white;
-        }
-
-        /* Forms */
-        .form-container {
-            background: white;
-            padding: 40px 30px;
-            border-radius: 0 0 16px 16px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
-            display: none;
-        }
-
-        .form-container.active {
-            display: block;
-            animation: slideIn 0.3s ease;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #333;
-            font-weight: 600;
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 14px 16px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            font-size: 16px;
-            transition: all 0.3s ease;
-            font-family: inherit;
-        }
-
-        .form-group input:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
-        }
-
-        .form-group input::placeholder {
-            color: #999;
-        }
-
-        .form-header {
+        h2 {
             text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .form-header h2 {
-            font-size: 28px;
-            color: #333;
-            margin-bottom: 8px;
-            font-weight: 700;
-        }
-
-        .form-header p {
-            color: #666;
-            font-size: 14px;
-        }
-
-        .password-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        .forgot-password {
-            text-align: right;
-            margin-top: 12px;
-        }
-
-        .forgot-password a {
-            color: #667eea;
-            text-decoration: none;
-            font-size: 13px;
+            color: #2e7d32;
+            margin-bottom: 20px;
             font-weight: 600;
+        }
+
+        p {
+            font-size: 14px;
+            font-weight: 400;
+            line-height: 22px;
+            letter-spacing: 0.5px;
+            margin: 20px 0 30px;
+        }
+
+        span {
+            font-size: 12px;
+            color: #555;
+        }
+
+        a {
+            color: #2e7d32;
+            font-size: 14px;
+            text-decoration: none;
+            margin: 15px 0;
             transition: color 0.3s ease;
         }
 
-        .forgot-password a:hover {
-            color: #764ba2;
+        a:hover {
+            color: #1b5e20;
         }
 
-        /* Submit Button */
-        .btn-submit {
-            width: 100%;
-            padding: 14px;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: 700;
-            text-transform: uppercase;
+        button {
+            border-radius: 25px;
+            border: 1px solid #16a34a;
+            background: linear-gradient(135deg, #16a34a 0%, #059669 100%);
+            color: #FFFFFF;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 14px 50px;
             letter-spacing: 1px;
-            cursor: pointer;
+            text-transform: uppercase;
             transition: all 0.3s ease;
-            margin-top: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(22, 163, 74, 0.3);
         }
 
-        .btn-submit.primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-
-        .btn-submit.primary:hover {
+        button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 6px 20px rgba(22, 163, 74, 0.4);
         }
 
-        .btn-submit.primary:active {
-            transform: translateY(0);
+        button:active {
+            transform: scale(0.98);
         }
 
-        .btn-submit:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
+        button:focus {
+            outline: none;
         }
 
-        /* Alerts */
-        .alert {
-            padding: 14px 16px;
+        button.ghost {
+            background: transparent;
+            border: 2px solid #FFFFFF;
+            box-shadow: none;
+        }
+
+        button.ghost:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        form {
+            background-color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 0 50px;
+            height: 100%;
+            text-align: center;
+        }
+
+        input {
+            background-color: #f1f8f4;
+            border: 2px solid transparent;
             border-radius: 10px;
-            margin-bottom: 20px;
+            padding: 14px 18px;
+            margin: 8px 0;
+            width: 100%;
             font-size: 14px;
-            animation: slideIn 0.3s ease;
+            font-family: 'Montserrat', sans-serif;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #16a34a;
+            background-color: #ffffff;
+            box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.1);
+        }
+
+        input::placeholder {
+            color: #888;
+        }
+
+        .container {
+            background-color: #fff;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(22, 163, 74, 0.15),
+                0 10px 20px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+            width: 850px;
+            max-width: 100%;
+            min-height: 520px;
+        }
+
+        .form-container {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            transition: all 0.6s ease-in-out;
+        }
+
+        .sign-in-container {
+            left: 0;
+            width: 50%;
+            z-index: 2;
+        }
+
+        .container.right-panel-active .sign-in-container {
+            transform: translateX(100%);
+        }
+
+        .sign-up-container {
+            left: 0;
+            width: 50%;
+            opacity: 0;
+            z-index: 1;
+        }
+
+        .container.right-panel-active .sign-up-container {
+            transform: translateX(100%);
+            opacity: 1;
+            z-index: 5;
+            animation: show 0.6s;
+        }
+
+        @keyframes show {
+
+            0%,
+            49.99% {
+                opacity: 0;
+                z-index: 1;
+            }
+
+            50%,
+            100% {
+                opacity: 1;
+                z-index: 5;
+            }
+        }
+
+        .overlay-container {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            width: 50%;
+            height: 100%;
+            overflow: hidden;
+            transition: transform 0.6s ease-in-out;
+            z-index: 100;
+        }
+
+        .container.right-panel-active .overlay-container {
+            transform: translateX(-100%);
+        }
+
+        .overlay {
+            background: linear-gradient(135deg, #16a34a 0%, #059669 50%, #047857 100%);
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-position: 0 0;
+            color: #FFFFFF;
+            position: relative;
+            left: -100%;
+            height: 100%;
+            width: 200%;
+            transform: translateX(0);
+            transition: transform 0.6s ease-in-out;
+        }
+
+        .container.right-panel-active .overlay {
+            transform: translateX(50%);
+        }
+
+        .overlay-panel {
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 0 40px;
+            text-align: center;
+            top: 0;
+            height: 100%;
+            width: 50%;
+            transform: translateX(0);
+            transition: transform 0.6s ease-in-out;
+        }
+
+        .overlay-panel h1 {
+            color: #fff;
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .overlay-panel p {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .overlay-left {
+            transform: translateX(-20%);
+        }
+
+        .container.right-panel-active .overlay-left {
+            transform: translateX(0);
+        }
+
+        .overlay-right {
+            right: 0;
+            transform: translateX(0);
+        }
+
+        .container.right-panel-active .overlay-right {
+            transform: translateX(20%);
+        }
+
+        .social-container {
+            margin: 20px 0;
+        }
+
+        .social-container a {
+            border: 1px solid #ddd;
+            border-radius: 50%;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 6px;
+            height: 45px;
+            width: 45px;
+            transition: all 0.3s ease;
+            color: #555;
+        }
+
+        .social-container a:hover {
+            background: linear-gradient(135deg, #16a34a 0%, #059669 100%);
+            color: #fff;
+            border-color: transparent;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(22, 163, 74, 0.3);
+        }
+
+        /* Alert Messages */
+        .alert {
+            padding: 12px 18px;
+            border-radius: 10px;
+            margin: 10px 0;
+            font-size: 13px;
+            width: 100%;
+            text-align: left;
         }
 
         .alert-error {
-            background: #fee;
-            color: #c33;
-            border-left: 4px solid #c33;
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            color: #b91c1c;
+            border-left: 4px solid #dc2626;
         }
 
         .alert-success {
-            background: #efe;
-            color: #3c3;
-            border-left: 4px solid #3c3;
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            color: #065f46;
+            border-left: 4px solid #10b981;
         }
 
-        /* Form name fields */
+        /* Form Labels */
+        .form-label {
+            color: #1b5e20;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            align-self: flex-start;
+            margin-bottom: -4px;
+            margin-top: 8px;
+        }
+
+        /* Name fields row */
         .name-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
+            display: flex;
+            gap: 10px;
+            width: 100%;
         }
 
-        /* Password input group */
-        .password-input-group {
+        .name-row input {
+            flex: 1;
+        }
+
+        /* Password toggle */
+        .password-wrapper {
             position: relative;
+            width: 100%;
+        }
+
+        .password-wrapper input {
+            padding-right: 45px;
         }
 
         .password-toggle {
@@ -242,200 +359,346 @@
             transform: translateY(-50%);
             background: none;
             border: none;
-            color: #667eea;
+            color: #16a34a;
             cursor: pointer;
-            font-size: 18px;
-            padding: 0;
-            width: 32px;
-            height: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            padding: 5px;
+            font-size: 16px;
+            box-shadow: none;
         }
 
-        .password-input-group input {
-            padding-right: 50px;
+        .password-toggle:hover {
+            color: #059669;
+            transform: translateY(-50%);
+            box-shadow: none;
+        }
+
+        /* Small helper text */
+        .help-text {
+            font-size: 11px;
+            color: #666;
+            margin-top: 4px;
+            align-self: flex-start;
+        }
+
+        /* Terms text */
+        .terms-text {
+            font-size: 11px;
+            color: #666;
+            margin: 15px 0;
+            line-height: 1.5;
+        }
+
+        /* Logo */
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .logo-container img {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            object-fit: cover;
+            box-shadow: 0 4px 12px rgba(22, 163, 74, 0.2);
+        }
+
+        .logo-container h3 {
+            color: #1b5e20;
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin: 0;
         }
 
         /* Mobile responsive */
-        @media (max-width: 480px) {
-            .auth-container {
-                max-width: 100%;
-                min-height: 100vh;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
+        @media (max-width: 768px) {
+            .container {
+                min-height: auto;
+                width: 100%;
             }
 
             .form-container {
-                padding: 30px 20px;
-                border-radius: 0;
+                position: relative;
+                width: 100%;
+                height: auto;
+                left: 0;
             }
 
-            .form-header h2 {
-                font-size: 24px;
+            .sign-in-container {
+                display: block;
+                z-index: 2;
             }
 
-            .tab-buttons {
-                border-radius: 0;
+            .sign-up-container {
+                display: none;
+                opacity: 1;
             }
 
-            .tab-button {
-                font-size: 14px;
-                padding: 14px;
+            .container.right-panel-active .sign-in-container {
+                display: none;
+                transform: none;
             }
 
-            .name-row,
-            .password-row {
-                grid-template-columns: 1fr;
-                gap: 12px;
+            .container.right-panel-active .sign-up-container {
+                display: block;
+                transform: none;
+                opacity: 1;
+                z-index: 5;
             }
 
-            body {
-                padding: 0;
+            .overlay-container {
+                display: none;
+            }
+
+            form {
+                padding: 40px 30px;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            /* Mobile tab buttons */
+            .mobile-tabs {
+                display: flex;
+                width: 100%;
+                border-bottom: 2px solid #e8f5e9;
+            }
+
+            .mobile-tab {
+                flex: 1;
+                padding: 16px;
+                background: #f1f8f4;
+                border: none;
+                color: #555;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                font-size: 13px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                box-shadow: none;
+            }
+
+            .mobile-tab.active {
+                background: linear-gradient(135deg, #16a34a 0%, #059669 100%);
+                color: #fff;
+            }
+
+            .mobile-tab:hover:not(.active) {
+                background: #e8f5e9;
+                transform: none;
+                box-shadow: none;
+            }
+        }
+
+        @media (min-width: 769px) {
+            .mobile-tabs {
+                display: none;
             }
         }
     </style>
 </head>
+
 <body>
-    <div class="auth-container">
-        <!-- Tab Buttons -->
-        <div class="tab-buttons">
-            <button class="tab-button active" onclick="switchTab('login')">Se connecter</button>
-            <button class="tab-button" onclick="switchTab('register')">Créer un compte</button>
+    <h2><i class="fas fa-graduation-cap"></i> GénieSchool - Connexion</h2>
+
+    <div class="container" id="container">
+        <!-- Mobile Tabs -->
+        <div class="mobile-tabs">
+            <button class="mobile-tab active" id="mobileSignIn" type="button">Se connecter</button>
+            <button class="mobile-tab" id="mobileSignUp" type="button">Créer un compte</button>
         </div>
 
-        <!-- Login Form -->
-        <div id="login" class="form-container active">
-            {% if error and 'register' not in request.POST %}
-            <div class="alert alert-error">{{ error }}</div>
-            {% endif %}
-
-            <div class="form-header">
-                <h2>Bienvenue</h2>
-                <p>Connectez-vous à votre compte</p>
-            </div>
-
-            <form method="post" action="">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="login">
-
-                <div class="form-group">
-                    <label for="identifier">Email, Nom ou ID Étudiant</label>
-                    <input type="text" id="identifier" name="identifier" placeholder="exemple@gmail.com, Dupont ou 42" required>
-                    <small style="color: #666; margin-top: 5px; display: block;">Entrez votre email, nom, ou ID étudiant</small>
-                </div>
-
-                <div class="form-group">
-                    <label for="password">Mot de passe <span style="color: #999;">(optionnel si vous utilisez l'ID)</span></label>
-                    <div class="password-input-group">
-                        <input type="password" id="password" name="password" placeholder="••••••••">
-                        <button type="button" class="password-toggle" onclick="togglePassword('password')">👁️</button>
-                    </div>
-                    <small style="color: #666; margin-top: 5px; display: block;">Laissez vide si vous vous connectez avec votre ID étudiant</small>
-                </div>
-
-                <div class="forgot-password">
-                    <a href="#">Mot de passe oublié?</a>
-                </div>
-
-                <button type="submit" class="btn-submit primary">Se connecter</button>
-            </form>
-        </div>
-
-        <!-- Register Form -->
-        <div id="register" class="form-container">
-            {% if success %}
-            <div class="alert alert-success">{{ success }}</div>
-            {% endif %}
-
-            {% if error and 'register' in request.POST %}
-            <div class="alert alert-error">{{ error }}</div>
-            {% endif %}
-
-            <div class="form-header">
-                <h2>Créer un compte</h2>
-                <p>Rejoignez GénieSchool en tant qu'étudiant</p>
-            </div>
-
+        <!-- Sign Up Form -->
+        <div class="form-container sign-up-container">
             <form method="post" action="">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="register">
 
+                <div class="logo-container">
+                    <img src="{% static 'school_logo.png' %}" alt="GénieSchool" onerror="this.style.display='none'">
+                    <h3>GénieSchool</h3>
+                </div>
+
+                <h1>Créer un compte</h1>
+
+                <div class="social-container">
+                    <a href="#" class="social"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="social"><i class="fab fa-google"></i></a>
+                    <a href="#" class="social"><i class="fab fa-linkedin-in"></i></a>
+                </div>
+
+                <span>ou utilisez votre email pour vous inscrire</span>
+
+                {% if success %}
+                <div class="alert alert-success">{{ success }}</div>
+                {% endif %}
+
+                {% if error and 'register' in request.POST %}
+                <div class="alert alert-error">{{ error }}</div>
+                {% endif %}
+
                 <div class="name-row">
-                    <div class="form-group">
-                        <label for="nom">Nom</label>
-                        <input type="text" id="nom" name="nom" placeholder="Votre nom" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="prenom">Prénom</label>
-                        <input type="text" id="prenom" name="prenom" placeholder="Votre prénom" required>
-                    </div>
+                    <input type="text" name="nom" placeholder="Nom" required />
+                    <input type="text" name="prenom" placeholder="Prénom" required />
                 </div>
 
-                <div class="form-group">
-                    <label for="email_register">Email</label>
-                    <input type="email" id="email_register" name="email_register" placeholder="vous@exemple.com" required>
+                <input type="email" name="email_register" placeholder="Email" required />
+
+                <div class="password-wrapper">
+                    <input type="password" id="password_register" name="password_register" placeholder="Mot de passe"
+                        required />
+                    <button type="button" class="password-toggle" onclick="togglePassword('password_register')">
+                        <i class="fas fa-eye"></i>
+                    </button>
                 </div>
 
-                <div class="password-row">
-                    <div class="form-group">
-                        <label for="password_register">Mot de passe</label>
-                        <div class="password-input-group">
-                            <input type="password" id="password_register" name="password_register" placeholder="••••••••" required>
-                            <button type="button" class="password-toggle" onclick="togglePassword('password_register')">👁️</button>
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="password_confirm">Confirmer</label>
-                        <div class="password-input-group">
-                            <input type="password" id="password_confirm" name="password_confirm" placeholder="••••••••" required>
-                            <button type="button" class="password-toggle" onclick="togglePassword('password_confirm')">👁️</button>
-                        </div>
-                    </div>
+                <div class="password-wrapper">
+                    <input type="password" id="password_confirm" name="password_confirm"
+                        placeholder="Confirmer le mot de passe" required />
+                    <button type="button" class="password-toggle" onclick="togglePassword('password_confirm')">
+                        <i class="fas fa-eye"></i>
+                    </button>
                 </div>
 
-                <p style="font-size: 12px; color: #666; text-align: center; margin: 15px 0;">
+                <p class="terms-text">
                     En créant un compte, vous acceptez nos conditions d'utilisation
                 </p>
 
-                <button type="submit" class="btn-submit primary">Créer mon compte</button>
+                <button type="submit">Créer mon compte</button>
             </form>
+        </div>
+
+        <!-- Sign In Form -->
+        <div class="form-container sign-in-container">
+            <form method="post" action="">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="login">
+
+                <div class="logo-container">
+                    <img src="{% static 'school_logo.png' %}" alt="GénieSchool" onerror="this.style.display='none'">
+                    <h3>GénieSchool</h3>
+                </div>
+
+                <h1>Se connecter</h1>
+
+                <div class="social-container">
+                    <a href="#" class="social"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" class="social"><i class="fab fa-google"></i></a>
+                    <a href="#" class="social"><i class="fab fa-linkedin-in"></i></a>
+                </div>
+
+                <span>ou utilisez votre compte</span>
+
+                {% if error and 'register' not in request.POST %}
+                <div class="alert alert-error">{{ error }}</div>
+                {% endif %}
+
+                <label class="form-label">Email, Nom ou ID Étudiant</label>
+                <input type="text" name="identifier" placeholder="exemple@gmail.com, Dupont ou ID" required />
+                <span class="help-text">Entrez votre email, nom, ou ID étudiant</span>
+
+                <label class="form-label">Mot de passe <span style="font-weight:400;color:#888;">(optionnel si vous
+                        utilisez l'ID)</span></label>
+                <div class="password-wrapper">
+                    <input type="password" id="password" name="password" placeholder="••••••••" />
+                    <button type="button" class="password-toggle" onclick="togglePassword('password')">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+                <span class="help-text">Laissez vide si vous vous connectez avec votre ID étudiant</span>
+
+                <a href="#">Mot de passe oublié ?</a>
+
+                <button type="submit">Se connecter</button>
+            </form>
+        </div>
+
+        <!-- Overlay -->
+        <div class="overlay-container">
+            <div class="overlay">
+                <div class="overlay-panel overlay-left">
+                    <h1>Bon retour !</h1>
+                    <p>Pour rester connecté avec nous, veuillez vous connecter avec vos informations personnelles</p>
+                    <button class="ghost" id="signIn" type="button">Se connecter</button>
+                </div>
+                <div class="overlay-panel overlay-right">
+                    <h1>Bienvenue !</h1>
+                    <p>Entrez vos détails personnels et commencez votre aventure avec nous</p>
+                    <button class="ghost" id="signUp" type="button">Créer un compte</button>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
-        function switchTab(tab) {
-            // Hide all forms
-            document.getElementById('login').classList.remove('active');
-            document.getElementById('register').classList.remove('active');
+        const signUpButton = document.getElementById('signUp');
+        const signInButton = document.getElementById('signIn');
+        const mobileSignUp = document.getElementById('mobileSignUp');
+        const mobileSignIn = document.getElementById('mobileSignIn');
+        const container = document.getElementById('container');
 
-            // Remove active class from all buttons
-            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+        // Desktop overlay buttons
+        signUpButton.addEventListener('click', () => {
+            container.classList.add("right-panel-active");
+        });
 
-            // Show selected form
-            document.getElementById(tab).classList.add('active');
+        signInButton.addEventListener('click', () => {
+            container.classList.remove("right-panel-active");
+        });
 
-            // Add active class to clicked button
-            event.target.classList.add('active');
-        }
+        // Mobile tab buttons
+        mobileSignUp.addEventListener('click', () => {
+            container.classList.add("right-panel-active");
+            mobileSignUp.classList.add('active');
+            mobileSignIn.classList.remove('active');
+        });
 
+        mobileSignIn.addEventListener('click', () => {
+            container.classList.remove("right-panel-active");
+            mobileSignIn.classList.add('active');
+            mobileSignUp.classList.remove('active');
+        });
+
+        // Password toggle function
         function togglePassword(inputId) {
             const input = document.getElementById(inputId);
-            const isPassword = input.type === 'password';
-            input.type = isPassword ? 'text' : 'password';
+            const icon = input.nextElementSibling.querySelector('i');
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
         }
 
         // Prevent double form submission
         document.querySelectorAll('form').forEach(form => {
-            form.addEventListener('submit', function() {
-                const submitBtn = this.querySelector('.btn-submit');
-                submitBtn.disabled = true;
-                submitBtn.style.opacity = '0.6';
+            form.addEventListener('submit', function () {
+                const submitBtn = this.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.style.opacity = '0.7';
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Chargement...';
+                }
             });
         });
+
+        // If there was a registration error or success, show the sign-up panel
+        {% if 'register' in request.POST or success %}
+        container.classList.add("right-panel-active");
+        if (mobileSignUp && mobileSignIn) {
+            mobileSignUp.classList.add('active');
+            mobileSignIn.classList.remove('active');
+        }
+        {% endif %}
     </script>
 </body>
+
 </html>
