@@ -1,14 +1,16 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="fr" data-theme="light">
+
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{% block title %}GénieSystemeSchool{% endblock %}</title>
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Material+Icons" rel="stylesheet"/>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Icons" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&amp;display=swap"
+    rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet" />
   <style type="text/tailwindcss">
     /* Theme variables (light defaults) */
     :root {
@@ -706,55 +708,77 @@
 
   <style>
     /* Helpers for auth / login pages: hide sidebar and center main area when body has .auth-page */
-    body.auth-page .sidebar, body.auth-page .nav-separator { display: none !important; }
-    body.auth-page .main-content { margin-left: 0 !important; }
-    body.auth-page main { padding: 2rem !important; display: flex; align-items: center; justify-content: center; }
-    body.auth-page .auth-container { width: 100%; max-width: 1200px; }
+    body.auth-page .sidebar,
+    body.auth-page .nav-separator {
+      display: none !important;
+    }
+
+    body.auth-page .main-content {
+      margin-left: 0 !important;
+    }
+
+    body.auth-page main {
+      padding: 2rem !important;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    body.auth-page .auth-container {
+      width: 100%;
+      max-width: 1200px;
+    }
   </style>
 
 </head>
+
 <body class="flex h-screen {% block body_class %}{% endblock %}">
   <aside id="sidebar" class="w-64 sidebar flex flex-col p-4">
     <div class="flex items-center mb-10">
-    {% if school_logo %}
-      <img src="{{ school_logo }}" alt="GénieSchool" class="w-16 h-16 rounded-lg object-cover mr-3 shadow-sm" style="flex-shrink:0;" />
-    {% else %}
       {% if school_logo %}
-        <img src="{{ school_logo }}" alt="GénieSchool" class="w-16 h-16 rounded-lg object-cover mr-3 shadow-sm" style="flex-shrink:0;" />
+      <img src="{{ school_logo }}" alt="GénieSchool" class="w-16 h-16 rounded-lg object-cover mr-3 shadow-sm"
+        style="flex-shrink:0;" />
       {% else %}
-        <img src="{% static 'school_logo.png' %}" alt="GénieSchool" class="w-16 h-16 rounded-lg object-cover mr-3 shadow-sm" style="flex-shrink:0;" />
+      {% if school_logo %}
+      <img src="{{ school_logo }}" alt="GénieSchool" class="w-16 h-16 rounded-lg object-cover mr-3 shadow-sm"
+        style="flex-shrink:0;" />
+      {% else %}
+      <img src="{% static 'school_logo.png' %}" alt="GénieSchool"
+        class="w-16 h-16 rounded-lg object-cover mr-3 shadow-sm" style="flex-shrink:0;" />
       {% endif %}
-    {% endif %}
+      {% endif %}
       <div class="logo-text">
         <h1 class="text-xl font-bold">GénieSchool</h1>
         <p class="text-sm">Excellence en Formation</p>
       </div>
     </div>
-  <!-- Animated nav indicator (moves to hovered/active link) -->
-  <div id="navIndicator" class="nav-indicator" aria-hidden="true"></div>
+    <!-- Animated nav indicator (moves to hovered/active link) -->
+    <div id="navIndicator" class="nav-indicator" aria-hidden="true"></div>
     <nav class="flex-grow">
       {% url 'dashboard' as dashboard_url %}
       {% url 'etudiants' as etu_url %}
-  {% url 'formateurs' as form_url %}
-  {% url 'enseignants' as enseignants_url %}
+      {% url 'formateurs' as form_url %}
+      {% url 'enseignants' as enseignants_url %}
       {% url 'formations' as formations_url %}
       {% url 'planning' as planning_url %}
-  {% url 'presence' as presence_url %}
+      {% url 'presence' as presence_url %}
       {% url 'examens' as examens_url %}
-  {% url 'inscriptions' as inscriptions_url %}
+      {% url 'inscriptions' as inscriptions_url %}
       {% url 'finances' as finances_url %}
-  {% url 'paiements' as paiements_url %}
+      {% url 'paiements' as paiements_url %}
       {% url 'reglements_enseignants' as reglements_enseignants_url %}
       {% url 'reglements_fournisseurs' as reglements_fournisseurs_url %}
       {% url 'rapports' as rapports_url %}
       <ul>
         <li class="mb-4">
-          <a href="{{ dashboard_url }}" class="flex items-center px-4 py-2 rounded-lg {% if request.path == dashboard_url %}active-link{% endif %}">
+          <a href="{{ dashboard_url }}"
+            class="flex items-center px-4 py-2 rounded-lg {% if request.path == dashboard_url %}active-link{% endif %}">
             <span class="material-icons mr-3">dashboard</span> Tableau de bord
           </a>
         </li>
         <li class="mb-4">
-          <div class="group-header px-4 py-2 rounded-lg flex items-center justify-between {% if request.path == etu_url or request.path == inscriptions_url %}active-link{% endif %}">
+          <div
+            class="group-header px-4 py-2 rounded-lg flex items-center justify-between {% if request.path == etu_url or request.path == inscriptions_url %}active-link{% endif %}">
             <div class="flex items-center">
               <span class="material-icons mr-3">people</span>
               <span>Étudiants</span>
@@ -777,34 +801,40 @@
           </ul>
         </li>
         <li class="mb-4">
-          <a href="{{ enseignants_url }}" class="flex items-center px-4 py-2 rounded-lg {% if request.path == form_url or request.path == enseignants_url %}active-link{% endif %}">
+          <a href="{{ enseignants_url }}"
+            class="flex items-center px-4 py-2 rounded-lg {% if request.path == form_url or request.path == enseignants_url %}active-link{% endif %}">
             <span class="material-icons mr-3">supervisor_account</span> Enseignant
           </a>
         </li>
         <li class="mb-4">
-          <a href="{{ formations_url }}" class="flex items-center px-4 py-2 rounded-lg {% if request.path == formations_url %}active-link{% endif %}">
+          <a href="{{ formations_url }}"
+            class="flex items-center px-4 py-2 rounded-lg {% if request.path == formations_url %}active-link{% endif %}">
             <span class="material-icons mr-3">school</span> Formations
           </a>
         </li>
         <li class="mb-4">
-          <a href="{{ planning_url }}" class="flex items-center px-4 py-2 rounded-lg {% if request.path == planning_url %}active-link{% endif %}">
+          <a href="{{ planning_url }}"
+            class="flex items-center px-4 py-2 rounded-lg {% if request.path == planning_url %}active-link{% endif %}">
             <span class="material-icons mr-3">event</span> Planning
           </a>
         </li>
         <li class="mb-4">
-          <a href="{{ presence_url }}" class="flex items-center px-4 py-2 rounded-lg {% if request.path == presence_url %}active-link{% endif %}">
+          <a href="{{ presence_url }}"
+            class="flex items-center px-4 py-2 rounded-lg {% if request.path == presence_url %}active-link{% endif %}">
             <span class="material-icons mr-3">visibility</span> Présence
           </a>
         </li>
         <li class="mb-4">
-          <a href="{{ examens_url }}" class="flex items-center px-4 py-2 rounded-lg {% if request.path == examens_url %}active-link{% endif %}">
+          <a href="{{ examens_url }}"
+            class="flex items-center px-4 py-2 rounded-lg {% if request.path == examens_url %}active-link{% endif %}">
             <span class="material-icons mr-3">assignment</span> Examens
           </a>
         </li>
-        
+
         <li class="mb-4">
           <div class="group-header">
-            <a href="{{ finances_url }}" class="flex items-center px-4 py-2 rounded-lg justify-between {% if request.path == finances_url %}active-link{% endif %}">
+            <a href="{{ finances_url }}"
+              class="flex items-center px-4 py-2 rounded-lg justify-between {% if request.path == finances_url %}active-link{% endif %}">
               <div class="flex items-center">
                 <span class="material-icons mr-3">payments</span>
                 <span>Finances</span>
@@ -812,10 +842,12 @@
               <span class="material-icons text-gray-400">expand_more</span>
             </a>
           </div>
-          <ul class="mt-2 submenu {% if request.path == finances_url or request.path == paiements_url or request.path == reglements_fournisseurs_url %}open{% endif %}">
-            
+          <ul
+            class="mt-2 submenu {% if request.path == finances_url or request.path == paiements_url or request.path == reglements_fournisseurs_url %}open{% endif %}">
+
             <li class="mb-2">
-              <a href="{{ reglements_fournisseurs_url }}" class="{% if request.path == reglements_fournisseurs_url %}active-link{% endif %}">
+              <a href="{{ reglements_fournisseurs_url }}"
+                class="{% if request.path == reglements_fournisseurs_url %}active-link{% endif %}">
                 <span class="material-icons mr-3 text-sm" style="vertical-align:middle;">storefront</span>
                 <span>Fournisseurs</span>
               </a>
@@ -836,133 +868,161 @@
           </ul>
         </li>
         <li class="mb-4">
-          <a href="/parametres/" class="flex items-center px-4 py-2 rounded-lg {% if '/parametres' in request.path %}active-link{% endif %}">
+          <a href="/parametres/"
+            class="flex items-center px-4 py-2 rounded-lg {% if '/parametres' in request.path %}active-link{% endif %}">
             <span class="material-icons mr-3">settings</span> Paramètres
           </a>
         </li>
         <li>
-          <a href="{{ rapports_url }}" class="flex items-center px-4 py-2 rounded-lg {% if request.path == rapports_url %}active-link{% endif %}">
+          <a href="{{ rapports_url }}"
+            class="flex items-center px-4 py-2 rounded-lg {% if request.path == rapports_url %}active-link{% endif %}">
             <span class="material-icons mr-3">bar_chart</span> Rapports
           </a>
         </li>
       </ul>
     </nav>
-   
-      <div class="relative">
-        {% comment %} Animated colored SVG avatar that uses CSS animation and shows initials if no avatar {% endcomment %}
-        <div class="flex items-center cursor-pointer" id="profileToggle">
-          <div class="w-10 h-10 rounded-full flex items-center justify-center mr-3 shadow-sm profile-avatar" aria-hidden="true">
-            <!-- gradient animated circle with initials -->
-            <svg viewBox="0 0 40 40" width="40" height="40" class="block rounded-full">
-              <defs>
-                <linearGradient id="g1" x1="0%" x2="100%">
-                  <stop offset="0%" stop-color="#06b6d4">
-                  </stop>
-                  <stop offset="100%" stop-color="#10b981">
-                  </stop>
-                </linearGradient>
-              </defs>
-              <circle cx="20" cy="20" r="20" fill="url(#g1)"></circle>
-              <text x="50%" y="55%" text-anchor="middle" fill="#fff" font-size="14" font-family="Poppins, sans-serif" font-weight="700">
-                {% if current_user %}
-                  {% with p=current_user.prenom n=current_user.nom %}
-                    {% if p %}
-                      {{ p|slice:":1"|upper }}
-                    {% elif n %}
-                      {{ n|slice:":1"|upper }}
-                    {% else %}
-                      G
-                    {% endif %}
-                  {% endwith %}
-                {% else %}
-                  G
-                {% endif %}
-              </text>
-            </svg>
-          </div>
-          <div class="user-info">
-            <p class="font-semibold">{% if current_user %}{{ current_user.prenom }} {{ current_user.nom }}{% else %}Invité{% endif %}</p>
-            <!-- role intentionally hidden per UX request -->
-          </div>
+
+    <div class="relative">
+      {% comment %} Animated colored SVG avatar that uses CSS animation and shows initials if no avatar {% endcomment %}
+      <div class="flex items-center cursor-pointer" id="profileToggle">
+        <div class="w-10 h-10 rounded-full flex items-center justify-center mr-3 shadow-sm profile-avatar"
+          aria-hidden="true">
+          <!-- gradient animated circle with initials -->
+          <svg viewBox="0 0 40 40" width="40" height="40" class="block rounded-full">
+            <defs>
+              <linearGradient id="g1" x1="0%" x2="100%">
+                <stop offset="0%" stop-color="#06b6d4">
+                </stop>
+                <stop offset="100%" stop-color="#10b981">
+                </stop>
+              </linearGradient>
+            </defs>
+            <circle cx="20" cy="20" r="20" fill="url(#g1)"></circle>
+            <text x="50%" y="55%" text-anchor="middle" fill="#fff" font-size="14" font-family="Poppins, sans-serif"
+              font-weight="700">
+              {% if current_user %}
+              {% with p=current_user.prenom n=current_user.nom %}
+              {% if p %}
+              {{ p|slice:":1"|upper }}
+              {% elif n %}
+              {{ n|slice:":1"|upper }}
+              {% else %}
+              G
+              {% endif %}
+              {% endwith %}
+              {% else %}
+              G
+              {% endif %}
+            </text>
+          </svg>
         </div>
-
-        <!-- dropdown with profile and logout -->
-        <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white card p-3 shadow-lg z-50" style="min-width:200px;">
-          <div class="mb-2">
-            <div class="text-sm text-gray-600">Connecté en tant</div>
-            <div class="font-semibold text-sm">{% if current_user %}{{ current_user.prenom }} {{ current_user.nom }}{% else %}Invité{% endif %}</div>
-            <!-- role hidden -->
-          </div>
-          <div class="border-t border-gray-100 mt-2 pt-2">
-            <a href="/parametres/" class="block px-2 py-1 text-sm text-gray-700 hover:bg-gray-50 rounded">Profil & paramètres</a>
-            <a href="{% url 'logout' %}" class="block px-2 py-1 text-sm text-red-600 hover:bg-red-50 rounded">Déconnexion</a>
-          </div>
+        <div class="user-info">
+          <p class="font-semibold">{% if current_user %}{{ current_user.prenom }} {{ current_user.nom }}{% else
+            %}Invité{% endif %}</p>
+          <!-- role intentionally hidden per UX request -->
         </div>
-        <style>
-          /* small pulsing animation for avatar gradient */
-          .profile-avatar svg circle { transform-origin: center; animation: pulse 3s infinite linear; }
-          @keyframes pulse { 0% { filter: hue-rotate(0deg) saturate(1); transform: scale(1); } 50% { filter: hue-rotate(25deg) saturate(1.05); transform: scale(1.03); } 100% { filter: hue-rotate(0deg) saturate(1); transform: scale(1); } }
-        </style>
-        <script>
-          // Robust profile dropdown: position fixed near the avatar so it won't be clipped
-          document.addEventListener('DOMContentLoaded', function(){
-            var toggle = document.getElementById('profileToggle');
-            var dd = document.getElementById('profileDropdown');
-            if(!toggle || !dd) return;
-
-            // Move the dropdown to document.body to avoid clipping by parent containers
-            try {
-              if (dd.parentNode !== document.body) document.body.appendChild(dd);
-            } catch (e) { /* ignore if moving fails */ }
-            // Ensure dropdown has an initial style we can adjust
-            dd.style.minWidth = dd.style.minWidth || '200px';
-            dd.classList.add('transition-all');
-
-            function placeDropdown() {
-              // compute bounding rect of the toggle (avatar area) relative to viewport
-              var rect = toggle.getBoundingClientRect();
-              // prefer fixed positioning to avoid clipping by parent containers
-              dd.style.position = 'fixed';
-              // place the right edge of the dropdown aligned with the right edge of the avatar
-              // but ensure it doesn't overflow the viewport
-              var ddWidth = dd.offsetWidth || 220;
-              var left = rect.right - ddWidth;
-              if (left < 8) left = 8; // small padding from left edge
-              // place slightly below the avatar
-              var top = rect.bottom + 8;
-              // if not enough space below, try place above
-              if (top + dd.offsetHeight > window.innerHeight - 8) {
-                top = rect.top - dd.offsetHeight - 8;
-                if (top < 8) top = 8;
-              }
-              dd.style.left = left + 'px';
-              dd.style.top = top + 'px';
-            }
-
-            function openDropdown() {
-              placeDropdown();
-              dd.classList.remove('hidden');
-            }
-            function closeDropdown() {
-              dd.classList.add('hidden');
-            }
-
-            toggle.addEventListener('click', function(e){
-              e.stopPropagation();
-              if (dd.classList.contains('hidden')) openDropdown(); else closeDropdown();
-            });
-
-            // Click outside -> close
-            document.addEventListener('click', function(e){
-              if (!toggle.contains(e.target) && !dd.contains(e.target)) closeDropdown();
-            });
-
-            // Keep dropdown correctly positioned on resize/scroll when open
-            window.addEventListener('resize', function(){ if (!dd.classList.contains('hidden')) placeDropdown(); });
-            window.addEventListener('scroll', function(){ if (!dd.classList.contains('hidden')) placeDropdown(); }, true);
-          });
-        </script>
       </div>
+
+      <!-- dropdown with profile and logout -->
+      <div id="profileDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white card p-3 shadow-lg z-50"
+        style="min-width:200px;">
+        <div class="mb-2">
+          <div class="text-sm text-gray-600">Connecté en tant</div>
+          <div class="font-semibold text-sm">{% if current_user %}{{ current_user.prenom }} {{ current_user.nom }}{%
+            else %}Invité{% endif %}</div>
+          <!-- role hidden -->
+        </div>
+        <div class="border-t border-gray-100 mt-2 pt-2">
+          <a href="/parametres/" class="block px-2 py-1 text-sm text-gray-700 hover:bg-gray-50 rounded">Profil &
+            paramètres</a>
+          <a href="{% url 'logout' %}"
+            class="block px-2 py-1 text-sm text-red-600 hover:bg-red-50 rounded">Déconnexion</a>
+        </div>
+      </div>
+      <style>
+        /* small pulsing animation for avatar gradient */
+        .profile-avatar svg circle {
+          transform-origin: center;
+          animation: pulse 3s infinite linear;
+        }
+
+        @keyframes pulse {
+          0% {
+            filter: hue-rotate(0deg) saturate(1);
+            transform: scale(1);
+          }
+
+          50% {
+            filter: hue-rotate(25deg) saturate(1.05);
+            transform: scale(1.03);
+          }
+
+          100% {
+            filter: hue-rotate(0deg) saturate(1);
+            transform: scale(1);
+          }
+        }
+      </style>
+      <script>
+        // Robust profile dropdown: position fixed near the avatar so it won't be clipped
+        document.addEventListener('DOMContentLoaded', function () {
+          var toggle = document.getElementById('profileToggle');
+          var dd = document.getElementById('profileDropdown');
+          if (!toggle || !dd) return;
+
+          // Move the dropdown to document.body to avoid clipping by parent containers
+          try {
+            if (dd.parentNode !== document.body) document.body.appendChild(dd);
+          } catch (e) { /* ignore if moving fails */ }
+          // Ensure dropdown has an initial style we can adjust
+          dd.style.minWidth = dd.style.minWidth || '200px';
+          dd.classList.add('transition-all');
+
+          function placeDropdown() {
+            // compute bounding rect of the toggle (avatar area) relative to viewport
+            var rect = toggle.getBoundingClientRect();
+            // prefer fixed positioning to avoid clipping by parent containers
+            dd.style.position = 'fixed';
+            // place the right edge of the dropdown aligned with the right edge of the avatar
+            // but ensure it doesn't overflow the viewport
+            var ddWidth = dd.offsetWidth || 220;
+            var left = rect.right - ddWidth;
+            if (left < 8) left = 8; // small padding from left edge
+            // place slightly below the avatar
+            var top = rect.bottom + 8;
+            // if not enough space below, try place above
+            if (top + dd.offsetHeight > window.innerHeight - 8) {
+              top = rect.top - dd.offsetHeight - 8;
+              if (top < 8) top = 8;
+            }
+            dd.style.left = left + 'px';
+            dd.style.top = top + 'px';
+          }
+
+          function openDropdown() {
+            placeDropdown();
+            dd.classList.remove('hidden');
+          }
+          function closeDropdown() {
+            dd.classList.add('hidden');
+          }
+
+          toggle.addEventListener('click', function (e) {
+            e.stopPropagation();
+            if (dd.classList.contains('hidden')) openDropdown(); else closeDropdown();
+          });
+
+          // Click outside -> close
+          document.addEventListener('click', function (e) {
+            if (!toggle.contains(e.target) && !dd.contains(e.target)) closeDropdown();
+          });
+
+          // Keep dropdown correctly positioned on resize/scroll when open
+          window.addEventListener('resize', function () { if (!dd.classList.contains('hidden')) placeDropdown(); });
+          window.addEventListener('scroll', function () { if (!dd.classList.contains('hidden')) placeDropdown(); }, true);
+        });
+      </script>
+    </div>
     </div>
   </aside>
   <!-- modern visual separator between sidebar and content -->
@@ -977,457 +1037,417 @@
     // Toggle sidebar submenu groups: click header to open/close
 
 
-    
-    document.addEventListener('DOMContentLoaded', function(){
-        // Theme initialization and toggle
-        try {
-          var htmlEl = document.documentElement;
-          var saved = null;
-          try { saved = localStorage.getItem('theme'); } catch(e) { saved = null; }
-          if (!saved) {
-            saved = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
-          }
-          htmlEl.setAttribute('data-theme', saved);
-          var toggle = document.getElementById('themeToggle');
-          var icon = document.getElementById('themeIcon');
-          var toggleSlider = document.querySelector('.toggle-slider');
-          if (toggle) {
-            toggle.checked = (saved === 'dark');
-            // set accessible attribute
-            if(toggleSlider) toggleSlider.setAttribute('aria-checked', toggle.checked ? 'true' : 'false');
-            toggle.addEventListener('change', function () {
-              var theme = toggle.checked ? 'dark' : 'light';
-              htmlEl.setAttribute('data-theme', theme);
-              try { localStorage.setItem('theme', theme); } catch(e) {}
-              if (icon) icon.textContent = theme === 'dark' ? 'dark_mode' : 'light_mode';
-              if(toggleSlider) toggleSlider.setAttribute('aria-checked', toggle.checked ? 'true' : 'false');
-            });
-          }
-          if (icon) icon.textContent = (saved === 'dark') ? 'dark_mode' : 'light_mode';
-        } catch(e) {}
-        document.querySelectorAll('.group-header').forEach(function(h){
-          h.setAttribute('role','button');
-          h.setAttribute('tabindex','0');
-          h.addEventListener('click', function(e){
-            // if the click originated from a link inside the header, let it navigate
-            if (e.target.closest('a')) return;
-            var ul = h.nextElementSibling;
-            if(!ul) return;
-            ul.classList.toggle('open');
-            h.classList.toggle('open');
-            // accessibility
-            var expanded = ul.classList.contains('open');
-            h.setAttribute('aria-expanded', expanded ? 'true' : 'false');
-            ul.setAttribute('aria-hidden', expanded ? 'false' : 'true');
+
+    document.addEventListener('DOMContentLoaded', function () {
+      // Theme initialization and toggle
+      try {
+        var htmlEl = document.documentElement;
+        var saved = null;
+        try { saved = localStorage.getItem('theme'); } catch (e) { saved = null; }
+        if (!saved) {
+          saved = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+        }
+        htmlEl.setAttribute('data-theme', saved);
+        var toggle = document.getElementById('themeToggle');
+        var icon = document.getElementById('themeIcon');
+        var toggleSlider = document.querySelector('.toggle-slider');
+        if (toggle) {
+          toggle.checked = (saved === 'dark');
+          // set accessible attribute
+          if (toggleSlider) toggleSlider.setAttribute('aria-checked', toggle.checked ? 'true' : 'false');
+          toggle.addEventListener('change', function () {
+            var theme = toggle.checked ? 'dark' : 'light';
+            htmlEl.setAttribute('data-theme', theme);
+            try { localStorage.setItem('theme', theme); } catch (e) { }
+            if (icon) icon.textContent = theme === 'dark' ? 'dark_mode' : 'light_mode';
+            if (toggleSlider) toggleSlider.setAttribute('aria-checked', toggle.checked ? 'true' : 'false');
           });
-          h.addEventListener('keydown', function(e){ if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); h.click(); } });
+        }
+        if (icon) icon.textContent = (saved === 'dark') ? 'dark_mode' : 'light_mode';
+      } catch (e) { }
+      document.querySelectorAll('.group-header').forEach(function (h) {
+        h.setAttribute('role', 'button');
+        h.setAttribute('tabindex', '0');
+        h.addEventListener('click', function (e) {
+          // if the click originated from a link inside the header, let it navigate
+          if (e.target.closest('a')) return;
+          var ul = h.nextElementSibling;
+          if (!ul) return;
+          ul.classList.toggle('open');
+          h.classList.toggle('open');
+          // accessibility
+          var expanded = ul.classList.contains('open');
+          h.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+          ul.setAttribute('aria-hidden', expanded ? 'false' : 'true');
         });
-        // Nav indicator interactivity: move indicator to hovered/active link
-        (function(){
-          var indicator = document.getElementById('navIndicator');
-          var aside = document.querySelector('.sidebar');
-          if(!indicator || !aside) return;
-          var items = Array.from(aside.querySelectorAll('a, .group-header'));
-          function place(el){
-            if(!el) return;
-            var rect = el.getBoundingClientRect();
-            var asideRect = aside.getBoundingClientRect();
-            var top = rect.top - asideRect.top + (window.scrollY || 0);
-            indicator.style.top = (top + 6) + 'px';
-            indicator.style.height = Math.max(36, rect.height - 8) + 'px';
-            indicator.style.opacity = 1;
-          }
-          // show indicator on hover
-          items.forEach(function(it){
-            it.addEventListener('mouseenter', function(){ place(it); });
-          });
-          // hide when leaving aside
-          aside.addEventListener('mouseleave', function(){ indicator.style.opacity = 0; });
-          // keep indicator on the active link if present
-          var active = aside.querySelector('.active-link');
-          if(active) place(active);
-        })();
+        h.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); h.click(); } });
       });
+      // Nav indicator interactivity: move indicator to hovered/active link
+      (function () {
+        var indicator = document.getElementById('navIndicator');
+        var aside = document.querySelector('.sidebar');
+        if (!indicator || !aside) return;
+        var items = Array.from(aside.querySelectorAll('a, .group-header'));
+        function place(el) {
+          if (!el) return;
+          var rect = el.getBoundingClientRect();
+          var asideRect = aside.getBoundingClientRect();
+          var top = rect.top - asideRect.top + (window.scrollY || 0);
+          indicator.style.top = (top + 6) + 'px';
+          indicator.style.height = Math.max(36, rect.height - 8) + 'px';
+          indicator.style.opacity = 1;
+        }
+        // show indicator on hover
+        items.forEach(function (it) {
+          it.addEventListener('mouseenter', function () { place(it); });
+        });
+        // hide when leaving aside
+        aside.addEventListener('mouseleave', function () { indicator.style.opacity = 0; });
+        // keep indicator on the active link if present
+        var active = aside.querySelector('.active-link');
+        if (active) place(active);
+      })();
+    });
   </script>
-    <!-- Mobile backdrop and bottom nav -->
-    <!-- Modern mobile navigation deployed: Dec 14, 2025 -->
-    <!-- Fixed DB toggle button: decorative, animated, posts to toggle-active DB endpoint -->
-    <button id="dbToggleBtn" title="Basculer la base active" aria-label="Basculer la base active" class="fixed-db-toggle" data-state="unknown">
-      <span id="dbToggleIcon" class="material-icons">cached</span>
-      <span id="dbToggleLabel" class="db-toggle-label">DB</span>
-      <span id="dbToggleSpinner" class="db-spinner hidden" aria-hidden="true"></span>
-    </button>
-    <div id="mobileBackdrop" class="mobile-backdrop" aria-hidden="true"></div>
-    <!-- Modern Fixed Bottom Navigation with Beautiful Colored Icons -->
-    {% url 'charges' as charges_url %}
-    <nav id="mobileBottomNav" class="sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-t from-white to-gray-50 border-t border-gray-300 shadow-2xl" role="navigation" aria-label="Navigation mobile">
-      <div class="flex items-center justify-around h-20 px-2">
-        <a href="{{ dashboard_url }}" class="mobile-nav-item flex flex-col items-center justify-center flex-1 h-full transition-all duration-300 {% if request.path == dashboard_url %}active{% endif %}" data-page="dashboard">
-          <div class="mobile-nav-icon-wrapper mb-1">
-            <span class="material-icons mobile-nav-icon text-2xl">dashboard</span>
-          </div>
-          <span class="mobile-nav-label text-xs font-semibold">Accueil</span>
-        </a>
-        <a href="{{ etu_url }}" class="mobile-nav-item flex flex-col items-center justify-center flex-1 h-full transition-all duration-300 {% if request.path == etu_url %}active{% endif %}" data-page="etudiants">
-          <div class="mobile-nav-icon-wrapper mb-1">
-            <span class="material-icons mobile-nav-icon text-2xl">people</span>
-          </div>
-          <span class="mobile-nav-label text-xs font-semibold">Étudiants</span>
-        </a>
-        <a href="{{ inscriptions_url }}" class="mobile-nav-item flex flex-col items-center justify-center flex-1 h-full transition-all duration-300 {% if request.path == inscriptions_url %}active{% endif %}" data-page="inscriptions">
-          <div class="mobile-nav-icon-wrapper mb-1">
-            <span class="material-icons mobile-nav-icon text-2xl">how_to_reg</span>
-          </div>
-          <span class="mobile-nav-label text-xs font-semibold">Inscriptions</span>
-        </a>
-        <a href="{{ charges_url }}" class="mobile-nav-item flex flex-col items-center justify-center flex-1 h-full transition-all duration-300 {% if request.path == charges_url %}active{% endif %}" data-page="charges" title="Accès rapide aux charges">
-          <div class="mobile-nav-icon-wrapper mb-1">
-            <span class="material-icons mobile-nav-icon text-2xl">receipt_long</span>
-          </div>
-          <span class="mobile-nav-label text-xs font-semibold">Charges</span>
-        </a>
-        <button id="mobileMenuBtn" class="mobile-nav-item flex flex-col items-center justify-center flex-1 h-full transition-all duration-300" data-page="menu">
-          <div class="mobile-nav-icon-wrapper mb-1">
-            <span class="material-icons mobile-nav-icon text-2xl">menu</span>
-          </div>
-          <span class="mobile-nav-label text-xs font-semibold">Menu</span>
-        </button>
-      </div>
-    </nav>
-    <style>
-      /* Beautiful Mobile Navigation Styles */
-      #mobileBottomNav {
-        display: flex !important;
-        visibility: visible !important;
-      }
-      .mobile-nav-item {
-        position: relative;
-        color: #6b7280;
-        text-decoration: none;
-        border-radius: 16px 16px 0 0;
-        overflow: visible;
-        cursor: pointer;
-        user-select: none;
-      }
-      
-      .mobile-nav-item::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 50%;
-        transform: translateX(-50%) scaleX(0);
-        width: 40px;
-        height: 3px;
-        background: linear-gradient(90deg, #06b6d4, #16a34a);
-        border-radius: 0 0 3px 3px;
-        transition: transform 0.3s cubic-bezier(.2,.9,.25,1);
-      }
-      
-      .mobile-nav-item.active::before {
-        transform: translateX(-50%) scaleX(1);
-      }
-      
-      .mobile-nav-icon-wrapper {
-        position: relative;
-        width: 52px;
-        height: 52px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 14px;
-        background: linear-gradient(135deg, rgba(6,182,212,0.1), rgba(22,163,74,0.1));
-        transition: all 0.3s cubic-bezier(.2,.9,.25,1);
-        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-      }
-      
-      .mobile-nav-item[data-page="dashboard"] .mobile-nav-icon-wrapper {
-        background: linear-gradient(135deg, rgba(59,130,246,0.12), rgba(99,102,241,0.12));
-      }
-      
-      .mobile-nav-item[data-page="etudiants"] .mobile-nav-icon-wrapper {
-        background: linear-gradient(135deg, rgba(236,72,153,0.12), rgba(219,39,119,0.12));
-      }
-      
-      .mobile-nav-item[data-page="inscriptions"] .mobile-nav-icon-wrapper {
-        background: linear-gradient(135deg, rgba(16,185,129,0.12), rgba(5,150,105,0.12));
-      }
-      
-      .mobile-nav-item[data-page="finances"] .mobile-nav-icon-wrapper {
-        background: linear-gradient(135deg, rgba(245,158,11,0.12), rgba(217,119,6,0.12));
-      }
-      
-      .mobile-nav-item[data-page="menu"] .mobile-nav-icon-wrapper {
-        background: linear-gradient(135deg, rgba(139,92,246,0.12), rgba(124,58,237,0.12));
-      }
-      
-      .mobile-nav-icon {
-        transition: all 0.3s cubic-bezier(.2,.9,.25,1);
-        color: #6b7280;
-      }
-      
-      .mobile-nav-item.active .mobile-nav-icon-wrapper {
-        transform: translateY(-6px) scale(1.15);
-        box-shadow: 0 12px 32px rgba(0,0,0,0.18);
-      }
-      
-      .mobile-nav-item[data-page="dashboard"].active .mobile-nav-icon-wrapper {
-        background: linear-gradient(135deg, #3b82f6, #6366f1);
-      }
-      
-      .mobile-nav-item[data-page="etudiants"].active .mobile-nav-icon-wrapper {
-        background: linear-gradient(135deg, #ec4899, #db2777);
-      }
-      
-      .mobile-nav-item[data-page="inscriptions"].active .mobile-nav-icon-wrapper {
-        background: linear-gradient(135deg, #10b981, #059669);
-      }
-      
-      .mobile-nav-item[data-page="finances"].active .mobile-nav-icon-wrapper {
-        background: linear-gradient(135deg, #f59e0b, #d97706);
-      }
-      
-      .mobile-nav-item[data-page="menu"].active .mobile-nav-icon-wrapper {
-        background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-      }
-      
-      .mobile-nav-item.active .mobile-nav-icon {
-        color: #ffffff;
-        transform: scale(1.1);
-      }
-      
-      .mobile-nav-item.active .mobile-nav-label {
-        color: #0f172a;
-        font-weight: 700;
-      }
-      
-      .mobile-nav-item:active {
-        transform: scale(0.95);
-      }
-      
-      /* Pulse animation for active items */
-      @keyframes navPulse {
-        0%, 100% { transform: translateY(-4px) scale(1.1); }
-        50% { transform: translateY(-6px) scale(1.15); }
-      }
-      
-      .mobile-nav-item.active .mobile-nav-icon-wrapper {
-        animation: navPulse 2s ease-in-out infinite;
-      }
-      
-      /* Hover effects for larger touch targets */
-      @media (hover: hover) {
-        .mobile-nav-item:hover .mobile-nav-icon-wrapper {
-          transform: translateY(-2px) scale(1.05);
-        }
-      }
-    </style>
-    <script>
-      // mobile nav toggle handlers
-      document.addEventListener('DOMContentLoaded', function(){
-    var sidebarEl = document.getElementById('sidebar') || document.querySelector('.sidebar');
-    var backdrop = document.getElementById('mobileBackdrop');
-    var menuBtn = document.getElementById('mobileMenuBtn') || document.getElementById('openSidebar');
-        if(!sidebarEl || !backdrop || !menuBtn) return;
+  <!-- Mobile backdrop and bottom nav -->
+  <!-- Modern mobile navigation deployed: Dec 14, 2025 -->
+  <!-- Fixed DB toggle button: decorative, animated, posts to toggle-active DB endpoint -->
+  <button id="dbToggleBtn" title="Basculer la base active" aria-label="Basculer la base active" class="fixed-db-toggle"
+    data-state="unknown">
+    <span id="dbToggleIcon" class="material-icons">cached</span>
+    <span id="dbToggleLabel" class="db-toggle-label">DB</span>
+    <span id="dbToggleSpinner" class="db-spinner hidden" aria-hidden="true"></span>
+  </button>
+  <div id="mobileBackdrop" class="mobile-backdrop" aria-hidden="true"></div>
+  <!-- Modern Fixed Bottom Navigation with Beautiful Colored Icons -->
+  {% url 'charges' as charges_url %}
 
-        function openSidebar(){ 
-          sidebarEl.classList.add('open'); 
-          backdrop.classList.add('visible'); 
-          document.body.style.overflow = 'hidden';
-          // Add smooth entrance animation
-          setTimeout(function() {
-            sidebarEl.style.transition = 'transform 320ms cubic-bezier(.2,.9,.25,1)';
-          }, 10);
-        }
-        function closeSidebar(){ 
-          sidebarEl.classList.remove('open'); 
-          backdrop.classList.remove('visible'); 
-          document.body.style.overflow = '';
-        }
 
-        menuBtn.addEventListener('click', function(e){ e.preventDefault(); e.stopPropagation(); openSidebar(); });
-        backdrop.addEventListener('click', function(){ closeSidebar(); });
+  <script>
+    // mobile nav toggle handlers
+    document.addEventListener('DOMContentLoaded', function () {
+      var sidebarEl = document.getElementById('sidebar') || document.querySelector('.sidebar');
+      var backdrop = document.getElementById('mobileBackdrop');
+      var menuBtn = document.getElementById('mobileMenuBtn') || document.getElementById('openSidebar');
+      if (!sidebarEl || !backdrop || !menuBtn) return;
 
-        // Close sidebar when a nav link is clicked (mobile)
-        sidebarEl.querySelectorAll('a').forEach(function(a){ a.addEventListener('click', function(){ closeSidebar(); }); });
-        
-        // Add touch swipe to close sidebar
-        var touchStartX = 0;
-        var touchEndX = 0;
-        sidebarEl.addEventListener('touchstart', function(e) {
-          touchStartX = e.changedTouches[0].screenX;
-        });
-        sidebarEl.addEventListener('touchend', function(e) {
-          touchEndX = e.changedTouches[0].screenX;
-          if (touchStartX - touchEndX > 50) {
-            closeSidebar();
-          }
-        });
+      function openSidebar() {
+        sidebarEl.classList.add('open');
+        backdrop.classList.add('visible');
+        document.body.style.overflow = 'hidden';
+        // Add smooth entrance animation
+        setTimeout(function () {
+          sidebarEl.style.transition = 'transform 320ms cubic-bezier(.2,.9,.25,1)';
+        }, 10);
+      }
+      function closeSidebar() {
+        sidebarEl.classList.remove('open');
+        backdrop.classList.remove('visible');
+        document.body.style.overflow = '';
+      }
+
+      menuBtn.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); openSidebar(); });
+      backdrop.addEventListener('click', function () { closeSidebar(); });
+
+      // Close sidebar when a nav link is clicked (mobile)
+      sidebarEl.querySelectorAll('a').forEach(function (a) { a.addEventListener('click', function () { closeSidebar(); }); });
+
+      // Add touch swipe to close sidebar
+      var touchStartX = 0;
+      var touchEndX = 0;
+      sidebarEl.addEventListener('touchstart', function (e) {
+        touchStartX = e.changedTouches[0].screenX;
       });
-    </script>
-    <script>
-      // Hide the mobile bottom nav whenever a modal-backdrop is visible (e.g. add/edit popups).
-      // This central approach avoids duplicating logic across templates and works for any modal.
-      (function(){
-        function isModalVisible(){
-          try{
-            var modals = document.querySelectorAll('.modal-backdrop');
-            for(var i=0;i<modals.length;i++){
-              var m = modals[i];
-              // consider visible if not having 'hidden' class and computed display is not 'none'
-              var style = window.getComputedStyle(m);
-              if(!m.classList.contains('hidden') && style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0') return true;
-            }
-          }catch(e){}
-          return false;
+      sidebarEl.addEventListener('touchend', function (e) {
+        touchEndX = e.changedTouches[0].screenX;
+        if (touchStartX - touchEndX > 50) {
+          closeSidebar();
         }
-
-        function setMobileNavHidden(hide){
-          var nav = document.getElementById('mobileBottomNav');
-          if(!nav) return;
-          if(typeof nav.dataset._origDisplay === 'undefined'){
-            nav.dataset._origDisplay = nav.style.display || window.getComputedStyle(nav).display || '';
+      });
+    });
+  </script>
+  <script>
+    // Hide the mobile bottom nav whenever a modal-backdrop is visible (e.g. add/edit popups).
+    // This central approach avoids duplicating logic across templates and works for any modal.
+    (function () {
+      function isModalVisible() {
+        try {
+          var modals = document.querySelectorAll('.modal-backdrop');
+          for (var i = 0; i < modals.length; i++) {
+            var m = modals[i];
+            // consider visible if not having 'hidden' class and computed display is not 'none'
+            var style = window.getComputedStyle(m);
+            if (!m.classList.contains('hidden') && style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0') return true;
           }
-          if(hide){ nav.style.display = 'none'; }
-          else { nav.style.display = nav.dataset._origDisplay || ''; }
-        }
+        } catch (e) { }
+        return false;
+      }
 
-        // Observe DOM changes to detect when modals are opened/closed and update nav visibility.
-        document.addEventListener('DOMContentLoaded', function(){
-          // initial state
-          setMobileNavHidden(isModalVisible());
-          var mo = new MutationObserver(function(){ setMobileNavHidden(isModalVisible()); });
-          mo.observe(document.body, { attributes: true, childList: true, subtree: true });
-          // also react to window resize/orientation changes
-          window.addEventListener('resize', function(){ setMobileNavHidden(isModalVisible()); });
-        });
-      })();
-    </script>
-    <style>
-      /* Fixed DB toggle button styles (appended at end to avoid interfering with existing rules) */
+      function setMobileNavHidden(hide) {
+        var nav = document.getElementById('mobileBottomNav');
+        if (!nav) return;
+        if (typeof nav.dataset._origDisplay === 'undefined') {
+          nav.dataset._origDisplay = nav.style.display || window.getComputedStyle(nav).display || '';
+        }
+        if (hide) { nav.style.display = 'none'; }
+        else { nav.style.display = nav.dataset._origDisplay || ''; }
+      }
+
+      // Observe DOM changes to detect when modals are opened/closed and update nav visibility.
+      document.addEventListener('DOMContentLoaded', function () {
+        // initial state
+        setMobileNavHidden(isModalVisible());
+        var mo = new MutationObserver(function () { setMobileNavHidden(isModalVisible()); });
+        mo.observe(document.body, { attributes: true, childList: true, subtree: true });
+        // also react to window resize/orientation changes
+        window.addEventListener('resize', function () { setMobileNavHidden(isModalVisible()); });
+      });
+    })();
+  </script>
+  <style>
+    /* Fixed DB toggle button styles (appended at end to avoid interfering with existing rules) */
+    .fixed-db-toggle {
+      position: fixed;
+      right: 20px;
+      bottom: 96px;
+      z-index: 110;
+      width: 56px;
+      height: 56px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 0.5rem;
+      background: linear-gradient(90deg, var(--app-green), var(--app-green-2));
+      color: #fff;
+      border: none;
+      box-shadow: 0 12px 30px rgba(6, 95, 70, 0.18);
+      cursor: pointer;
+      transition: transform 180ms ease, box-shadow 180ms ease, opacity 160ms;
+      font-weight: 700;
+    }
+
+    .fixed-db-toggle:active {
+      transform: scale(0.96);
+    }
+
+    .fixed-db-toggle .material-icons {
+      font-size: 20px;
+    }
+
+    .fixed-db-toggle .db-toggle-label {
+      display: none;
+      font-size: 12px;
+    }
+
+    .db-spinner {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.22);
+      border-top-color: #fff;
+      animation: spin 900ms linear infinite;
+      margin-left: 6px;
+    }
+
+    .db-spinner.hidden {
+      display: none;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .fixed-db-toggle.active {
+      box-shadow: 0 18px 40px rgba(6, 182, 146, 0.22);
+      transform: translateY(-4px);
+    }
+
+    @media (max-width: 640px) {
       .fixed-db-toggle {
-        position: fixed;
-        right: 20px;
-        bottom: 96px;
-        z-index: 110;
-        width: 56px;
-        height: 56px;
-        border-radius: 999px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-        padding: 0.5rem;
-        background: linear-gradient(90deg,var(--app-green),var(--app-green-2));
-        color: #fff;
-        border: none;
-        box-shadow: 0 12px 30px rgba(6,95,70,0.18);
-        cursor: pointer;
-        transition: transform 180ms ease, box-shadow 180ms ease, opacity 160ms;
-        font-weight:700;
+        right: 12px;
+        bottom: 112px;
+        width: 48px;
+        height: 48px;
       }
-      .fixed-db-toggle:active { transform: scale(0.96); }
-      .fixed-db-toggle .material-icons { font-size: 20px; }
-      .fixed-db-toggle .db-toggle-label { display: none; font-size: 12px; }
-      .db-spinner { width: 18px; height: 18px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.22); border-top-color: #fff; animation: spin 900ms linear infinite; margin-left:6px; }
-      .db-spinner.hidden { display: none; }
-      @keyframes spin { to { transform: rotate(360deg); } }
-      .fixed-db-toggle.active { box-shadow: 0 18px 40px rgba(6,182,146,0.22); transform: translateY(-4px); }
-      @media (max-width: 640px) { .fixed-db-toggle { right: 12px; bottom: 112px; width:48px; height:48px; } }
-    </style>
-    <script>
-      (function(){
-        function getCookie(name){ var v = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)'); return v ? v.pop() : ''; }
-        document.addEventListener('DOMContentLoaded', function(){
-          try{
-            var btn = document.getElementById('dbToggleBtn'); if(!btn) return;
-            var spinner = document.getElementById('dbToggleSpinner');
-            var icon = document.getElementById('dbToggleIcon');
-            var label = document.getElementById('dbToggleLabel');
-            var toggleUrl = '{% url "toggle_active_db" %}';
-            function setLoading(on){ if(on){ spinner.classList.remove('hidden'); btn.disabled = true; btn.style.opacity = 0.9; } else { spinner.classList.add('hidden'); btn.disabled = false; btn.style.opacity = 1; } }
-            function reflectStateFromCookie(){ var c = document.cookie.match('(^|;)\\s*active_db\\s*=\\s*([^;]+)'); if(c && c[2]){ btn.dataset.state = c[2]; btn.classList.add('active'); label.textContent = c[2]; } }
-            reflectStateFromCookie();
-            btn.addEventListener('click', function(e){ e.preventDefault(); setLoading(true); fetch(toggleUrl, { method: 'POST', headers: { 'Accept': 'application/json', 'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/x-www-form-urlencoded' }, body: '' }).then(function(resp){ return resp.json(); }).then(function(json){ setLoading(false); if(json && json.ok){ var name = json.active_db || json.active_db_name || json.active_db_alias || ''; if(name){ btn.dataset.state = name; label.textContent = name; btn.classList.add('active'); } icon.textContent = 'check_circle'; setTimeout(function(){ icon.textContent = 'cached'; }, 1200); // redirect to login so user is re-authenticated for the selected DB
-                  setTimeout(function(){ window.location.href = '{% url "login" %}'; }, 600);
-                } else { icon.textContent = 'error'; setTimeout(function(){ icon.textContent = 'cached'; }, 1400); } }).catch(function(err){ setLoading(false); icon.textContent = 'error'; setTimeout(function(){ icon.textContent = 'cached'; }, 1400); }); });
-          }catch(e){ console.warn('DB toggle init failed', e); }
-        });
-      })();
-    </script>
-    <script>
-      // If the active_db cookie indicates the 'langues' DB, apply an orange theme and show a large banner
-      (function(){
-        function getCookie(name){ var v = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)'); return v ? v.pop() : ''; }
-        document.addEventListener('DOMContentLoaded', function(){
-          try{
-            var active = getCookie('active_db') || '';
-            // treat alias 'schooloctobre' (bdlangue) as the langues DB
-            if(active.toLowerCase() === 'schooloctobre' || active.toLowerCase().indexOf('lang') !== -1 || active.toLowerCase().indexOf('bdlangue') !== -1){
-              // add a class to html to override CSS variables
-              document.documentElement.classList.add('db-langues');
-              // create a prominent banner informing the user
-              var banner = document.createElement('div');
-              
-             
-              document.body.insertBefore(banner, document.body.firstChild);
-            }
-          }catch(e){ console.warn('db-langues banner init failed', e); }
-        });
-      })();
-    </script>
-    <style>
-      /* Orange / langues theme overrides when html has class .db-langues */
-      html.db-langues { --app-green: #fb923c; --app-green-2: #f97316; --accent-1: #fb923c; --accent-2: #f97316; --bg-primary: #fff7ed; --bg-card: #fffaf0; --text-primary: #7c2d12; }
-      /* Sidebar (left navbar) adjustments when on bdlangues: dark gray variant */
-      html.db-langues { --bg-sidebar: linear-gradient(180deg,#374151,#4b5563); --sidebar-text: #f8fafc; --sidebar-muted: #e5e7eb; --sidebar-border: rgba(255,255,255,0.04); }
-      html.db-langues .sidebar {
-        background: var(--bg-sidebar) !important;
-        color: var(--sidebar-text) !important;
-        border-right: 1px solid var(--sidebar-border) !important;
-      }
-      html.db-langues .sidebar .logo-text h1 { color: var(--sidebar-text) !important; }
-      html.db-langues .sidebar .logo-text p { color: var(--sidebar-muted) !important; }
-      html.db-langues .sidebar a { color: var(--sidebar-muted) !important; }
-      html.db-langues .sidebar a.active-link, html.db-langues .sidebar a:hover { background: rgba(249,115,22,0.14) !important; color: var(--sidebar-text) !important; }
-      html.db-langues .sidebar .material-icons { color: var(--sidebar-text) !important; }
-      /* make the nav-separator slightly warmer to blend with the sidebar */
-      html.db-langues .nav-separator { background: transparent !important; }
-      /* Stronger force: ensure the entire sidebar background becomes a solid gray and
+    }
+  </style>
+  <script>
+    (function () {
+      function getCookie(name) { var v = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)'); return v ? v.pop() : ''; }
+      document.addEventListener('DOMContentLoaded', function () {
+        try {
+          var btn = document.getElementById('dbToggleBtn'); if (!btn) return;
+          var spinner = document.getElementById('dbToggleSpinner');
+          var icon = document.getElementById('dbToggleIcon');
+          var label = document.getElementById('dbToggleLabel');
+          var toggleUrl = '{% url "toggle_active_db" %}';
+          function setLoading(on) { if (on) { spinner.classList.remove('hidden'); btn.disabled = true; btn.style.opacity = 0.9; } else { spinner.classList.add('hidden'); btn.disabled = false; btn.style.opacity = 1; } }
+          function reflectStateFromCookie() { var c = document.cookie.match('(^|;)\\s*active_db\\s*=\\s*([^;]+)'); if (c && c[2]) { btn.dataset.state = c[2]; btn.classList.add('active'); label.textContent = c[2]; } }
+          reflectStateFromCookie();
+          btn.addEventListener('click', function (e) {
+            e.preventDefault(); setLoading(true); fetch(toggleUrl, { method: 'POST', headers: { 'Accept': 'application/json', 'X-CSRFToken': getCookie('csrftoken'), 'Content-Type': 'application/x-www-form-urlencoded' }, body: '' }).then(function (resp) { return resp.json(); }).then(function (json) {
+              setLoading(false); if (json && json.ok) {
+                var name = json.active_db || json.active_db_name || json.active_db_alias || ''; if (name) { btn.dataset.state = name; label.textContent = name; btn.classList.add('active'); } icon.textContent = 'check_circle'; setTimeout(function () { icon.textContent = 'cached'; }, 1200); // redirect to login so user is re-authenticated for the selected DB
+                setTimeout(function () { window.location.href = '{% url "login" %}'; }, 600);
+              } else { icon.textContent = 'error'; setTimeout(function () { icon.textContent = 'cached'; }, 1400); }
+            }).catch(function (err) { setLoading(false); icon.textContent = 'error'; setTimeout(function () { icon.textContent = 'cached'; }, 1400); });
+          });
+        } catch (e) { console.warn('DB toggle init failed', e); }
+      });
+    })();
+  </script>
+  <script>
+    // If the active_db cookie indicates the 'langues' DB, apply an orange theme and show a large banner
+    (function () {
+      function getCookie(name) { var v = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)'); return v ? v.pop() : ''; }
+      document.addEventListener('DOMContentLoaded', function () {
+        try {
+          var active = getCookie('active_db') || '';
+          // treat alias 'schooloctobre' (bdlangue) as the langues DB
+          if (active.toLowerCase() === 'schooloctobre' || active.toLowerCase().indexOf('lang') !== -1 || active.toLowerCase().indexOf('bdlangue') !== -1) {
+            // add a class to html to override CSS variables
+            document.documentElement.classList.add('db-langues');
+            // create a prominent banner informing the user
+            var banner = document.createElement('div');
+
+
+            document.body.insertBefore(banner, document.body.firstChild);
+          }
+        } catch (e) { console.warn('db-langues banner init failed', e); }
+      });
+    })();
+  </script>
+  <style>
+    /* Orange / langues theme overrides when html has class .db-langues */
+    html.db-langues {
+      --app-green: #fb923c;
+      --app-green-2: #f97316;
+      --accent-1: #fb923c;
+      --accent-2: #f97316;
+      --bg-primary: #fff7ed;
+      --bg-card: #fffaf0;
+      --text-primary: #7c2d12;
+    }
+
+    /* Sidebar (left navbar) adjustments when on bdlangues: dark gray variant */
+    html.db-langues {
+      --bg-sidebar: linear-gradient(180deg, #374151, #4b5563);
+      --sidebar-text: #f8fafc;
+      --sidebar-muted: #e5e7eb;
+      --sidebar-border: rgba(255, 255, 255, 0.04);
+    }
+
+    html.db-langues .sidebar {
+      background: var(--bg-sidebar) !important;
+      color: var(--sidebar-text) !important;
+      border-right: 1px solid var(--sidebar-border) !important;
+    }
+
+    html.db-langues .sidebar .logo-text h1 {
+      color: var(--sidebar-text) !important;
+    }
+
+    html.db-langues .sidebar .logo-text p {
+      color: var(--sidebar-muted) !important;
+    }
+
+    html.db-langues .sidebar a {
+      color: var(--sidebar-muted) !important;
+    }
+
+    html.db-langues .sidebar a.active-link,
+    html.db-langues .sidebar a:hover {
+      background: rgba(249, 115, 22, 0.14) !important;
+      color: var(--sidebar-text) !important;
+    }
+
+    html.db-langues .sidebar .material-icons {
+      color: var(--sidebar-text) !important;
+    }
+
+    /* make the nav-separator slightly warmer to blend with the sidebar */
+    html.db-langues .nav-separator {
+      background: transparent !important;
+    }
+
+    /* Stronger force: ensure the entire sidebar background becomes a solid gray and
          neutralize any inner white cards that could show through (use specific selectors
          and !important to beat utility classes like Tailwind's bg-white). */
-      html.db-langues aside#sidebar, html.db-langues #sidebar, html.db-langues .sidebar {
-        background-color: #4b5563 !important; /* much darker gray (Tailwind gray-600) */
-        background-image: none !important;
-        color: var(--sidebar-text) !important;
-      }
-      html.db-langues .sidebar .bg-white, html.db-langues .sidebar .card, html.db-langues .sidebar [class*="bg-white"] {
-        background: transparent !important;
-        box-shadow: none !important;
-        border: none !important;
-      }
-      /* If sidebar items use inline utility classes (eg. rounded bg-white on links), make links transparent too */
-      html.db-langues .sidebar a, html.db-langues .sidebar .group-header, html.db-langues .sidebar .logo-text {
-        background: transparent !important;
-      }
-      /* Navbar / topbar color adjustments for langues DB: prefer a modern light-gray instead of pure white */
-      html.db-langues header,
-      html.db-langues .topbar,
-      html.db-langues .page-header,
-      html.db-langues .navbar,
-      html.db-langues .main-header,
-      html.db-langues .card.bg-white,
-      html.db-langues .bg-white {
-        background-color: #f3f4f6 !important; /* Tailwind gray-100 */
-        color: var(--text-primary) !important;
-        border-bottom: 1px solid rgba(2,6,23,0.04) !important;
-      }
-      /* Dashboard-specific header decoration: make the top title area stand out with a subtle gray panel */
-      html.db-langues main header { background: linear-gradient(90deg,#f8fafc,#f3f4f6) !important; padding: 12px 18px !important; border-radius: 10px; border: 1px solid rgba(2,6,23,0.04) !important; }
-      html.db-langues .header-text { color: #92400e !important; /* keep readable against the gray and match langues branding */ }
-      /* Ensure header stats contrast nicely */
-      html.db-langues .header-stats .header-stat { background: transparent !important; }
-      /* Preserve the small banner shown for the langues DB */
-      #dbLangBannerLarge { position: fixed; top: 72px; left: 50%; transform: translateX(-50%); z-index: 120; background: linear-gradient(90deg,#fff7ed,#fff3e0); padding: 10px 18px; border-radius: 10px; border: 2px solid #f97316; box-shadow: 0 10px 30px rgba(249,115,22,0.12); margin: 6px; }
-    </style>
+    html.db-langues aside#sidebar,
+    html.db-langues #sidebar,
+    html.db-langues .sidebar {
+      background-color: #4b5563 !important;
+      /* much darker gray (Tailwind gray-600) */
+      background-image: none !important;
+      color: var(--sidebar-text) !important;
+    }
+
+    html.db-langues .sidebar .bg-white,
+    html.db-langues .sidebar .card,
+    html.db-langues .sidebar [class*="bg-white"] {
+      background: transparent !important;
+      box-shadow: none !important;
+      border: none !important;
+    }
+
+    /* If sidebar items use inline utility classes (eg. rounded bg-white on links), make links transparent too */
+    html.db-langues .sidebar a,
+    html.db-langues .sidebar .group-header,
+    html.db-langues .sidebar .logo-text {
+      background: transparent !important;
+    }
+
+    /* Navbar / topbar color adjustments for langues DB: prefer a modern light-gray instead of pure white */
+    html.db-langues header,
+    html.db-langues .topbar,
+    html.db-langues .page-header,
+    html.db-langues .navbar,
+    html.db-langues .main-header,
+    html.db-langues .card.bg-white,
+    html.db-langues .bg-white {
+      background-color: #f3f4f6 !important;
+      /* Tailwind gray-100 */
+      color: var(--text-primary) !important;
+      border-bottom: 1px solid rgba(2, 6, 23, 0.04) !important;
+    }
+
+    /* Dashboard-specific header decoration: make the top title area stand out with a subtle gray panel */
+    html.db-langues main header {
+      background: linear-gradient(90deg, #f8fafc, #f3f4f6) !important;
+      padding: 12px 18px !important;
+      border-radius: 10px;
+      border: 1px solid rgba(2, 6, 23, 0.04) !important;
+    }
+
+    html.db-langues .header-text {
+      color: #92400e !important;
+      /* keep readable against the gray and match langues branding */
+    }
+
+    /* Ensure header stats contrast nicely */
+    html.db-langues .header-stats .header-stat {
+      background: transparent !important;
+    }
+
+    /* Preserve the small banner shown for the langues DB */
+    #dbLangBannerLarge {
+      position: fixed;
+      top: 72px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 120;
+      background: linear-gradient(90deg, #fff7ed, #fff3e0);
+      padding: 10px 18px;
+      border-radius: 10px;
+      border: 2px solid #f97316;
+      box-shadow: 0 10px 30px rgba(249, 115, 22, 0.12);
+      margin: 6px;
+    }
+  </style>
 </body>
+
 </html>
