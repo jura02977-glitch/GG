@@ -1,4 +1,4 @@
-﻿from django.shortcuts import render
+from django.shortcuts import render
 from django.http import JsonResponse
 from django.db.models import Sum, Avg, Count, Q
 from .utils import calculate_balances
@@ -9273,3 +9273,497 @@ def api_mobile_ecole_detail(request):
         return JsonResponse({'success': True, 'students': students, 'history': history})
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+# ============================================================================
+# STUDENT MOBILE APP APIs
+# ============================================================================
+
+@csrf_exempt
+def api_student_login(request):
+    """
+    Student login with just student ID (no password required).
+    POST /api/mobile/student/login/
+    Body: { "student_id": 123 }
+    Returns student profile data and sets session.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'POST required'}, status=405)
+    
+    try:
+        # Accept both form data and JSON
+        student_id = None
+        if request.content_type and 'application/json' in request.content_type:
+            try:
+                data = json.loads(request.body)
+                student_id = data.get('student_id')
+            except:
+                pass
+        if not student_id:
+            student_id = request.POST.get('student_id')
+        
+        if not student_id:
+            return JsonResponse({'success': False, 'error': 'student_id requis'}, status=400)
+        
+        # Find student by ID
+        try:
+            etudiant = Etudiant.objects.get(pk=int(student_id))
+        except Etudiant.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Étudiant non trouvé'}, status=404)
+        except ValueError:
+            return JsonResponse({'success': False, 'error': 'ID invalide'}, status=400)
+        
+        # Set session
+        request.session['student_id'] = etudiant.id
+        request.session['student_name'] = f"{etudiant.prenom} {etudiant.nom}"
+        
+        # Build photo URL
+        photo_url = ''
+        if etudiant.photo:
+            try:
+                photo_url = settings.MEDIA_URL + etudiant.photo
+            except:
+                photo_url = etudiant.photo
+        
+        return JsonResponse({
+            'success': True,
+            'student': {
+                'id': etudiant.id,
+                'nom': etudiant.nom,
+                'prenom': etudiant.prenom,
+                'email': etudiant.email or '',
+                'telephone': etudiant.telephone or '',
+                'photo': photo_url,
+                'niveau_etude': etudiant.niveau_etude or '',
+                'date_inscription': etudiant.date_inscription.isoformat() if etudiant.date_inscription else None,
+            }
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@csrf_exempt
+def api_student_profile(request):
+    """
+    Get current logged-in student profile.
+    GET /api/mobile/student/profile/
+    """
+    try:
+        student_id = request.session.get('student_id')
+        if not student_id:
+            return JsonResponse({'success': False, 'error': 'Non authentifié'}, status=401)
+        
+        try:
+            etudiant = Etudiant.objects.get(pk=student_id)
+        except Etudiant.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Étudiant non trouvé'}, status=404)
+        
+        # Build photo URL
+        photo_url = ''
+        if etudiant.photo:
+            try:
+                photo_url = settings.MEDIA_URL + etudiant.photo
+            except:
+                photo_url = etudiant.photo
+        
+        # Get inscriptions count
+        inscriptions_count = Inscription.objects.filter(etudiant=etudiant).count()
+        
+        # Get balance using utility
+        balance = 0
+        try:
+            balances = calculate_balances(etudiant.id)
+            balance = balances.get('ancien_solde', 0) or 0
+        except:
+            pass
+        
+        return JsonResponse({
+            'success': True,
+            'student': {
+                'id': etudiant.id,
+                'nom': etudiant.nom,
+                'prenom': etudiant.prenom,
+                'nom_arabe': etudiant.nom_arabe or '',
+                'prenom_arabe': etudiant.prenom_arabe or '',
+                'email': etudiant.email or '',
+                'telephone': etudiant.telephone or '',
+                'mobile': etudiant.mobile or '',
+                'adresse': etudiant.adresse or '',
+                'date_naissance': etudiant.date_naissance.isoformat() if etudiant.date_naissance else None,
+                'lieu_naissance': etudiant.lieu_naissance or '',
+                'nationalite': etudiant.nationalite or '',
+                'sexe': etudiant.sexe or '',
+                'niveau_etude': etudiant.niveau_etude or '',
+                'dernier_diplome': etudiant.dernier_diplome or '',
+                'situation_professionnelle': etudiant.situation_professionnelle or '',
+                'photo': photo_url,
+                'date_inscription': etudiant.date_inscription.isoformat() if etudiant.date_inscription else None,
+                'inscriptions_count': inscriptions_count,
+                'balance': float(balance),
+            }
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@csrf_exempt
+def api_student_formations(request):
+    """
+    List all available formations with categories.
+    GET /api/mobile/student/formations/
+    Query: ?category=Coding&search=python
+    """
+    try:
+        # Filter for active formations (accept 'actif' or 'active')
+        qs = Formation.objects.filter(Q(statut__iexact='actif') | Q(statut__iexact='active')).order_by('-date_creation', 'nom')
+        
+        # Filter by category
+        category = request.GET.get('category')
+        if category and category.lower() != 'all':
+            qs = qs.filter(Q(categorie__iexact=category) | Q(branche__iexact=category))
+        
+        # Search
+        search = request.GET.get('search', '').strip()
+        if search:
+            qs = qs.filter(Q(nom__icontains=search) | Q(contenu__icontains=search))
+        
+        # Get unique categories
+        categories = []
+        try:
+            cats = Formation.objects.filter(Q(statut__iexact='actif') | Q(statut__iexact='active')).exclude(
+                categorie__isnull=True
+            ).exclude(categorie='').values_list('categorie', flat=True).distinct()
+            categories = list(set(cats))[:10]
+        except:
+            pass
+        
+        # Build formations list
+        formations = []
+        for f in qs[:50]:
+            photo_url = ''
+            if f.photo:
+                try:
+                    photo_url = settings.MEDIA_URL + f.photo
+                except:
+                    photo_url = f.photo
+            
+            # Get instructor (first enseignant linked to this formation)
+            instructor = None
+            try:
+                ens = Enseignant.objects.filter(formation=f, is_active=True).first()
+                if ens:
+                    instructor = {
+                        'name': f"{ens.prenom} {ens.nom}",
+                        'photo': settings.MEDIA_URL + ens.photo if ens.photo else ''
+                    }
+            except:
+                pass
+            
+            # Get enrolled students count
+            students_count = Inscription.objects.filter(formation=f).count()
+            
+            formations.append({
+                'id': f.id,
+                'nom': f.nom,
+                'categorie': f.categorie or f.branche or 'Formation',
+                'niveau': f.niveau or '',
+                'duree': f.duree or '',
+                'prix': float(f.prix_etudiant or 0),
+                'photo': photo_url,
+                'contenu': (f.contenu or '')[:200],
+                'instructor': instructor,
+                'students_count': students_count,
+                'featured': students_count > 10,  # Mark popular courses as featured
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'categories': categories,
+            'formations': formations,
+            'total': qs.count()
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@csrf_exempt
+def api_student_inscriptions(request):
+    """
+    Get logged-in student's inscriptions with progress.
+    GET /api/mobile/student/inscriptions/?student_id=123
+    """
+    try:
+        # Accept student_id from GET param (mobile app) or session (web)
+        student_id = request.GET.get('student_id') or request.session.get('student_id')
+        if not student_id:
+            return JsonResponse({'success': False, 'error': 'Non authentifié'}, status=401)
+        
+        inscriptions = Inscription.objects.select_related('formation').filter(
+            etudiant_id=student_id
+        ).order_by('-date_inscription')
+        
+        results = []
+        for ins in inscriptions:
+            formation = ins.formation
+            
+            photo_url = ''
+            if formation and formation.photo:
+                try:
+                    photo_url = settings.MEDIA_URL + formation.photo
+                except:
+                    photo_url = formation.photo
+            
+            # Calculate payment progress
+            prix_total = float(ins.prix_total or 0) if ins.prix_total else (
+                float(formation.prix_etudiant or 0) if formation and formation.prix_etudiant else 0
+            )
+            
+            # Sum of payments for this inscription/student
+            paid = 0
+            try:
+                paid_qs = Paiement.objects.filter(etudiant_id=student_id)
+                if ins.formation:
+                    paid_qs = paid_qs.filter(
+                        Q(formation=ins.formation) | Q(inscription=ins)
+                    )
+                paid = float(paid_qs.aggregate(total=Sum('montant'))['total'] or 0)
+            except:
+                pass
+            
+            remaining = max(0, prix_total - paid)
+            payment_progress = min(100, (paid / prix_total * 100)) if prix_total > 0 else 100
+            
+            # Get instructor
+            instructor = None
+            try:
+                if formation:
+                    ens = Enseignant.objects.filter(formation=formation, is_active=True).first()
+                    if ens:
+                        instructor = {
+                            'name': f"{ens.prenom} {ens.nom}",
+                            'photo': settings.MEDIA_URL + ens.photo if ens.photo else ''
+                        }
+            except:
+                pass
+            
+            results.append({
+                'id': ins.id,
+                'formation': {
+                    'id': formation.id if formation else None,
+                    'nom': formation.nom if formation else 'N/A',
+                    'categorie': formation.categorie or formation.branche if formation else '',
+                    'duree': formation.duree if formation else '',
+                    'niveau': formation.niveau if formation else '',
+                    'photo': photo_url,
+                },
+                'date_inscription': ins.date_inscription.isoformat() if ins.date_inscription else None,
+                'statut': ins.statut or 'inscrit',
+                'progress_percent': float(ins.progress_percent or 0),
+                'groupe': ins.groupe.nom if ins.groupe else None,
+                'session': ins.session or '',
+                'prix_total': prix_total,
+                'paid': paid,
+                'remaining': remaining,
+                'payment_progress': round(payment_progress, 1),
+                'instructor': instructor,
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'inscriptions': results,
+            'total': len(results)
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@csrf_exempt
+def api_student_payments(request):
+    """
+    Get logged-in student's payment history and progression.
+    GET /api/mobile/student/payments/?student_id=123
+    """
+    try:
+        # Accept student_id from GET param (mobile app) or session (web)
+        student_id = request.GET.get('student_id') or request.session.get('student_id')
+        if not student_id:
+            return JsonResponse({'success': False, 'error': 'Non authentifié'}, status=401)
+        
+        # Get all payments
+        paiements = Paiement.objects.select_related('formation', 'inscription').filter(
+            etudiant_id=student_id
+        ).order_by('-date_paiement', '-created_at')
+        
+        # Calculate totals
+        total_due = 0
+        total_paid = 0
+        
+        # Get from inscriptions
+        inscriptions = Inscription.objects.select_related('formation').filter(etudiant_id=student_id)
+        for ins in inscriptions:
+            if ins.prix_total:
+                total_due += float(ins.prix_total)
+            elif ins.formation and ins.formation.prix_etudiant:
+                total_due += float(ins.formation.prix_etudiant)
+        
+        # Sum payments
+        total_paid = float(paiements.aggregate(total=Sum('montant'))['total'] or 0)
+        
+        remaining = max(0, total_due - total_paid)
+        progress = min(100, (total_paid / total_due * 100)) if total_due > 0 else 100
+        
+        # Build payments list
+        payments = []
+        for p in paiements[:50]:
+            formation_name = ''
+            if p.formation:
+                formation_name = p.formation.nom
+            elif p.inscription and p.inscription.formation:
+                formation_name = p.inscription.formation.nom
+            
+            payments.append({
+                'id': p.id,
+                'reference': p.reference or f'RET{p.id}',
+                'montant': float(p.montant),
+                'date_paiement': p.date_paiement.isoformat() if p.date_paiement else None,
+                'mode_paiement': p.mode_paiement or 'Espèces',
+                'statut': p.statut or 'Payé',
+                'formation': formation_name,
+                'remarques': p.remarques or '',
+            })
+        
+        return JsonResponse({
+            'success': True,
+            'summary': {
+                'total_due': round(total_due, 2),
+                'total_paid': round(total_paid, 2),
+                'remaining': round(remaining, 2),
+                'progress': round(progress, 1),
+            },
+            'payments': payments,
+            'total': len(payments)
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def api_student_inscription_create(request):
+    """
+    Allow student to self-register for a formation.
+    POST /api/mobile/student/inscriptions/create/
+    Body: { "student_id": 123, "formation_id": 456 }
+    """
+    try:
+        data = json.loads(request.body)
+        student_id = data.get('student_id')
+        formation_id = data.get('formation_id')
+        
+        if not student_id or not formation_id:
+            return JsonResponse({'success': False, 'error': 'Données manquantes'}, status=400)
+            
+        student = get_object_or_404(Etudiant, pk=student_id)
+        formation = get_object_or_404(Formation, pk=formation_id)
+        
+        # Check if already enrolled
+        if Inscription.objects.filter(etudiant=student, formation=formation).exists():
+             return JsonResponse({'success': False, 'error': 'Déjà inscrit à cette formation'}, status=400)
+             
+        # Create inscription
+        ins = Inscription(
+            etudiant=student,
+            formation=formation,
+            date_inscription=timezone.now().date(),
+            statut='inscrit',
+            prix_total=formation.prix_etudiant,
+            ecole='Genie School' 
+        )
+        ins.save()
+        
+        return JsonResponse({'success': True, 'message': 'Inscription réussie !'})
+        
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+
+@csrf_exempt
+@require_http_methods(["POST"])
+def api_student_profile_update(request):
+    """
+    Update student profile info and photo.
+    POST /api/mobile/student/profile/update/
+    FormData: student_id, email, telephone, photo (file)
+    """
+    from django.core.files.storage import default_storage
+    from django.core.files.base import ContentFile
+    import os
+
+    try:
+        student_id = request.POST.get('student_id')
+        if not student_id:
+             return JsonResponse({'success': False, 'error': 'ID étudiant manquant'}, status=400)
+
+        student = get_object_or_404(Etudiant, pk=student_id)
+        
+        # Update text fields
+        if 'email' in request.POST:
+            student.email = request.POST.get('email')
+        if 'telephone' in request.POST:
+            student.telephone = request.POST.get('telephone')
+        if 'adresse' in request.POST:
+            student.adresse = request.POST.get('adresse')
+            
+        # Update photo if provided
+        if 'photo' in request.FILES:
+            photo_file = request.FILES['photo']
+            # Create a unique path: etudiants/photos/student_<id>_photo.<ext>
+            ext = os.path.splitext(photo_file.name)[1]
+            path = f"etudiants/photos/student_{student.id}_photo{ext}"
+            
+            # Remove old file if it exists (optional, but clean)
+            if student.photo and default_storage.exists(student.photo):
+                try:
+                    default_storage.delete(student.photo)
+                except:
+                    pass
+
+            # Save new file manually
+            file_path = default_storage.save(path, ContentFile(photo_file.read()))
+            student.photo = file_path
+            
+        student.save()
+        
+        # Return updated profile URL
+        photo_url = ''
+        if student.photo:
+            if student.photo.startswith('http'):
+                 photo_url = student.photo
+            else:
+                 photo_url = settings.MEDIA_URL + str(student.photo)
+                
+        return JsonResponse({
+            'success': True, 
+            'message': 'Profil mis à jour !',
+            'student': {
+                'id': student.id,
+                'email': student.email,
+                'telephone': student.telephone,
+                'photo': photo_url
+            }
+        })
+        
+    except Exception as e:
+        import traceback
+        return JsonResponse({'success': False, 'error': str(e), 'trace': traceback.format_exc()}, status=500)
+
+
+def mobile_student_app(request):
+    """
+    Render the student mobile app single-page template.
+    GET /m/student/
+    """
+    return render(request, 'mobile_student_app.html')
+
