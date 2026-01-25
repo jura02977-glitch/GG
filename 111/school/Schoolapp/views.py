@@ -9856,22 +9856,29 @@ def api_student_upload_docs(request):
                 import requests
                 import json
                 import base64
+                import mimetypes
+                
+                # Determine mime type
+                mime_type, _ = mimetypes.guess_type(path)
+                if not mime_type:
+                    mime_type = 'image/jpeg' # Default
                 
                 # Encode image to base64
-                # Go back to start of file to read it again
                 sensed_file = request.FILES['carte_identite']
                 sensed_file.seek(0)
                 image_bytes = sensed_file.read()
                 base64_image = base64.b64encode(image_bytes).decode('utf-8')
                 
                 # Prepare API call
-                api_key = "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"
+                api_key = "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"
                 
                 response = requests.post(
                   url="https://openrouter.ai/api/v1/chat/completions",
                   headers={
                     "Authorization": f"Bearer {api_key}",
                     "Content-Type": "application/json",
+                    "HTTP-Referer": "https://genieschool.up.railway.app",
+                    "X-Title": "GenieSchool",
                   },
                   data=json.dumps({
                     "model": "allenai/molmo-2-8b:free",
@@ -9886,7 +9893,7 @@ def api_student_upload_docs(request):
                           {
                             "type": "image_url",
                             "image_url": {
-                              "url": f"data:image/jpeg;base64,{base64_image}"
+                              "url": f"data:{mime_type};base64,{base64_image}"
                             }
                           }
                         ]
@@ -9902,11 +9909,9 @@ def api_student_upload_docs(request):
                         content = ai_response['choices'][0]['message']['content']
                         print(f"AI OCR Raw Response: {content}")
                         
-                        # Clean and extract digits
                         import re
                         possible_nin = re.sub(r'\D', '', content)
                         
-                        # Basic validation
                         if len(possible_nin) >= 8:
                             student.nin = possible_nin
                             print(f"NIN Detected and saved: {possible_nin}")
