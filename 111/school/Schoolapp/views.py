@@ -9397,6 +9397,7 @@ def api_student_profile(request):
                 'dernier_diplome': etudiant.dernier_diplome or '',
                 'situation_professionnelle': etudiant.situation_professionnelle or '',
                 'photo': photo_url,
+                'carte_identite_photo': request.build_absolute_uri(settings.MEDIA_URL + str(etudiant.carte_identite_photo)) if etudiant.carte_identite_photo else None,
                 'date_inscription': etudiant.date_inscription.isoformat() if etudiant.date_inscription else None,
                 'inscriptions_count': inscriptions_count,
                 'balance': float(balance),
@@ -9780,6 +9781,8 @@ def api_student_signup(request):
         prenom = data.get('prenom')
         email = data.get('email')
         telephone = data.get('telephone')
+        adresse = data.get('adresse')
+        date_naissance = data.get('date_naissance') # Format YYYY-MM-DD
 
         if not nom or not prenom:
              return JsonResponse({'success': False, 'error': 'Nom et Prénom requis'}, status=400)
@@ -9791,6 +9794,8 @@ def api_student_signup(request):
             prenom=prenom,
             email=email,
             telephone=telephone,
+            adresse=adresse,
+            date_naissance=date_naissance if date_naissance else None,
             date_inscription=timezone.now().date(),
             verification_step=0,
             statut='actif' # Default status
