@@ -9398,6 +9398,7 @@ def api_student_profile(request):
                 'situation_professionnelle': etudiant.situation_professionnelle or '',
                 'photo': photo_url,
                 'carte_identite_photo': request.build_absolute_uri(settings.MEDIA_URL + str(etudiant.carte_identite_photo)) if etudiant.carte_identite_photo else None,
+                'nin': etudiant.nin or '',
                 'date_inscription': etudiant.date_inscription.isoformat() if etudiant.date_inscription else None,
                 'inscriptions_count': inscriptions_count,
                 'balance': float(balance),
@@ -9851,12 +9852,53 @@ def api_student_upload_docs(request):
 
             file_path = default_storage.save(path, ContentFile(f.read()))
             student.carte_identite_photo = file_path
+            
+            # --- OCR LOGIC (EasyOCR) ---
+            try:
+                import easyocr
+                import re
+                
+                # Initialize reader for French and English (download happens only once)
+                # gpu=False to be safe on servers without CUDA, set to True if available
+                reader = easyocr.Reader(['fr', 'en'], gpu=False) 
+                
+                # Get full path for OCR processing
+                full_path = os.path.join(settings.MEDIA_ROOT, path)
+                
+                # Read text
+                result = reader.readtext(full_path, detail=0)
+                full_text = " ".join(result)
+                print(f"OCR Result for Student {student.id}: {full_text}")
+                
+                # Heuristic: Find the longest numeric sequence usually representing ID/NIN
+                # Cleaning spaces to concatenate split numbers (e.g. "109 333")
+                clean_text = full_text.replace(" ", "")
+                
+                # Search for sequence of digits (e.g., 9 to 18 digits)
+                # Adjust regex based on specific country NIN format if known
+                nin_candidates = re.findall(r'\d{9,20}', clean_text)
+                
+                if nin_candidates:
+                    # Take the longest one found as the most likely NIN
+                    detected_nin = max(nin_candidates, key=len)
+                    student.nin = detected_nin
+                    print(f"NIN Detected and saved: {detected_nin}")
+            except ImportError:
+                print("EasyOCR not installed. Skipping OCR.")
+            except Exception as ocr_error:
+                print(f"OCR Error: {ocr_error}")
+            # ---------------------------
+
             # Update verification step if needed
             if student.verification_step < 1:
                 student.verification_step = 1
             student.save()
             
-            return JsonResponse({'success': True, 'message': 'Carte d\'identité téléversée !'})
+            return JsonResponse({
+                'success': True, 
+                'message': 'Carte d\'identité téléversée !', 
+                'nin_detected': student.nin
+            })
             
         return JsonResponse({'success': False, 'error': 'Aucun fichier fourni'}, status=400)
 
