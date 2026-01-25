@@ -4,3 +4,5 @@ weasyprint>=58.0
 gunicorn==21.2.0
 mysqlclient
 whitenoise>=6.0
+easyocr>=1.7.0
+opencv-python-headless>=4.8.0
