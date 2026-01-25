@@ -169,6 +169,11 @@ urlpatterns = [
   
   # Student Mobile App
   path('m/student/', views.mobile_student_app, name='mobile_student_app'),
+  
+  # New Mobile APIs
+  path('api/mobile/student/signup/', views.api_student_signup, name='api_student_signup'),
+  path('api/mobile/student/upload-docs/', views.api_student_upload_docs, name='api_student_upload_docs'),
+
 
 ]
 
