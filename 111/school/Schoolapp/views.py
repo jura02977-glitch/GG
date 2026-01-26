@@ -9352,7 +9352,6 @@ def api_student_profile(request):
     try:
         student_id = request.session.get('student_id')
         if not student_id:
-             # Fallback to GET parameter for mobile robustness
              student_id = request.GET.get('student_id')
              
         if not student_id:
@@ -9360,6 +9359,7 @@ def api_student_profile(request):
         
         try:
             etudiant = Etudiant.objects.get(pk=student_id)
+            print(f"DEBUG PROFILE: Fetching student {student_id}, found NIN: {etudiant.nin}")
         except Etudiant.DoesNotExist:
             return JsonResponse({'success': False, 'error': 'Étudiant non trouvé'}, status=404)
         
@@ -9916,40 +9916,51 @@ def api_student_upload_docs(request):
                 if response.status_code == 200:
                     ai_response = response.json()
                     try:
-                        content = ai_response['choices'][0]['message']['content']
-                        print(f"AI OCR Raw Response: {content}")
+                        # Molmo response
+                        content = ai_response['choices'][0]['message']['content'].strip()
+                        print(f"DEBUG: OCR Raw response: {content}")
                         
                         import re
-                        possible_nin = re.sub(r'\D', '', content)
+                        # Get all numbers
+                        all_numbers = re.findall(r'\d{9,20}', content.replace(" ", ""))
                         
-                        if len(possible_nin) >= 8:
-                            student.nin = possible_nin
-                            print(f"NIN Detected and saved: {possible_nin}")
+                        if all_numbers:
+                            # Take the longest numeric sequence (most likely NIN)
+                            detected_nin = max(all_numbers, key=len)
+                            student.nin = detected_nin
+                            print(f"DEBUG: NIN detected and updated in instance: {detected_nin} for student {student.id}")
                         else:
-                            print(f"AI returned invalid NIN content: {content}")
-                    except (KeyError, IndexError):
-                        print("Invalid AI response format")
+                            print(f"DEBUG: No valid NIN found in content: {content}")
+                    except (KeyError, IndexError) as e:
+                        print(f"DEBUG: AI response format error: {e}")
                 else:
-                    print(f"OpenRouter API Error: {response.status_code} - {response.text}")
+                    print(f"DEBUG: OpenRouter Error {response.status_code}: {response.text}")
 
             except Exception as ocr_error:
-                print(f"OCR Logic Error: {ocr_error}")
+                print(f"DEBUG: OCR Logic Exception: {ocr_error}")
             # ---------------------------
 
-            # Update verification step if needed
+            # Update verification step
             if student.verification_step < 1:
                 student.verification_step = 1
-            student.save()
             
-            # FORCE UPDATE in DB (bypass potential local instance caching)
+            # Persist changes
+            student.save()
+            print(f"DEBUG: Student {student.id} saved in DB. current nin value in instance: {student.nin}")
+            
+            # Force update again just in case of stale cache
             if student.nin:
                 Etudiant.objects.filter(pk=student.id).update(nin=student.nin)
-                print(f"FORCED PERSISTENCE: NIN {student.nin} saved for student {student.id}")
+            
+            # FINAL REFRESH
+            student.refresh_from_db()
+            print(f"DEBUG: Final value from DB for student {student.id}: NIN={student.nin}")
             
             return JsonResponse({
                 'success': True, 
                 'message': 'Carte d\'identité téléversée !', 
-                'nin_detected': student.nin
+                'nin_detected': student.nin,
+                'student_id': student.id
             })
             
         return JsonResponse({'success': False, 'error': 'Aucun fichier fourni'}, status=400)
