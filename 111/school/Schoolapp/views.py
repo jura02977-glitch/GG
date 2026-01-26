@@ -9871,19 +9871,18 @@ def api_student_upload_docs(request):
                 
                 # Prepare API call
                 from django.conf import settings
-                api_key = settings.OPENROUTER_API_KEY
+                # Use the newly provided key
+                api_key = "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"
                 
-                if not api_key:
-                    print("OpenRouter API Key is missing in settings!")
-                    return JsonResponse({'success': False, 'error': 'Configuration API manquante'}, status=500)
-                
+                # Check if settings has it, otherwise use this one
+                if hasattr(settings, 'OPENROUTER_API_KEY') and settings.OPENROUTER_API_KEY:
+                    api_key = settings.OPENROUTER_API_KEY
+
                 response = requests.post(
                   url="https://openrouter.ai/api/v1/chat/completions",
                   headers={
                     "Authorization": f"Bearer {api_key}",
                     "Content-Type": "application/json",
-                    "HTTP-Referer": "https://genieschool.up.railway.app",
-                    "X-Title": "GenieSchool",
                   },
                   data=json.dumps({
                     "model": "allenai/molmo-2-8b:free",
@@ -9893,7 +9892,7 @@ def api_student_upload_docs(request):
                         "content": [
                           {
                             "type": "text",
-                            "text": "Extract the National Identification Number (NIN) from this Identity Card image. It is usually a long sequence of digits (9 to 20 digits). Return ONLY the number digits, no other text."
+                            "text": "Extract the National Identification Number (NIN) from this Identity Card. Look for a long number (usually 18 digits). Return ONLY the digits of the number, nothing else."
                           },
                           {
                             "type": "image_url",
