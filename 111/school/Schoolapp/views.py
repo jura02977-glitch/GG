@@ -9870,7 +9870,12 @@ def api_student_upload_docs(request):
                 base64_image = base64.b64encode(image_bytes).decode('utf-8')
                 
                 # Prepare API call
-                api_key = "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"
+                from django.conf import settings
+                api_key = settings.OPENROUTER_API_KEY
+                
+                if not api_key:
+                    print("OpenRouter API Key is missing in settings!")
+                    return JsonResponse({'success': False, 'error': 'Configuration API manquante'}, status=500)
                 
                 response = requests.post(
                   url="https://openrouter.ai/api/v1/chat/completions",
