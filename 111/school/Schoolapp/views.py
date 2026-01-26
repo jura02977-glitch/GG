@@ -9398,6 +9398,8 @@ def api_student_profile(request):
                 'dernier_diplome': etudiant.dernier_diplome or '',
                 'situation_professionnelle': etudiant.situation_professionnelle or '',
                 'photo': photo_url,
+                'carte_identite_photo': request.build_absolute_uri(settings.MEDIA_URL + str(etudiant.carte_identite_photo)) if etudiant.carte_identite_photo else None,
+                'nin': etudiant.nin or '',
                 'date_inscription': etudiant.date_inscription.isoformat() if etudiant.date_inscription else None,
                 'inscriptions_count': inscriptions_count,
                 'balance': float(balance),
