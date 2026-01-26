@@ -9352,6 +9352,10 @@ def api_student_profile(request):
     try:
         student_id = request.session.get('student_id')
         if not student_id:
+             # Fallback to GET parameter for mobile robustness
+             student_id = request.GET.get('student_id')
+             
+        if not student_id:
             return JsonResponse({'success': False, 'error': 'Non authentifié'}, status=401)
         
         try:
