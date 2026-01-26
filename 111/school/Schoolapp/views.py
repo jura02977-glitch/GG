@@ -9917,22 +9917,26 @@ def api_student_upload_docs(request):
                     ai_response = response.json()
                     try:
                         content = ai_response['choices'][0]['message']['content'].strip()
-                        print(f"DEBUG OCR: AI Response: {content}")
+                        print(f"DEBUG OCR: AI Response content: {content}")
                         
                         import re
-                        # Clean: remove absolutely everything that is not a digit
-                        clean_digits = re.sub(r'\D', '', content)
+                        # 1. Nettoyage : retirer espaces et points qui coupent souvent le NIN
+                        clean_content = content.replace(" ", "").replace(".", "").replace("-", "")
                         
-                        if len(clean_digits) >= 8:
-                            newly_detected_nin = clean_digits
+                        # 2. Recherche de blocs de chiffres (entre 9 et 22 chiffres)
+                        all_numbers = re.findall(r'\d{9,22}', clean_content)
+                        
+                        if all_numbers:
+                            # 3. Prendre le bloc le plus long (c'est presque toujours le NIN)
+                            newly_detected_nin = max(all_numbers, key=len)
                             student.nin = newly_detected_nin
-                            print(f"DEBUG OCR: NIN detected and updated: {newly_detected_nin}")
+                            print(f"DEBUG OCR: SUCCESS! Longest block detected: {newly_detected_nin}")
                         else:
-                            print(f"DEBUG OCR: No valid NIN found in: {content}")
-                    except (KeyError, IndexError):
-                        print("DEBUG OCR: Parsing failed.")
+                            print(f"DEBUG OCR: FAILED - No numeric block >= 9 digits found in: {content}")
+                    except (KeyError, IndexError) as e:
+                        print(f"DEBUG OCR: ERROR parsing JSON response: {e}")
                 else:
-                    print(f"DEBUG OCR: API Error {response.status_code}: {response.text}")
+                    print(f"DEBUG OCR: API ERROR {response.status_code}: {response.text}")
                     return JsonResponse({'success': False, 'error': f"Erreur API ({response.status_code}) - Vérifiez votre clé sur Railway"}, status=500)
 
             except Exception as e:
