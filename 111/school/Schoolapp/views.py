@@ -9857,13 +9857,14 @@ def api_student_upload_docs(request):
             file_path = default_storage.save(path, ContentFile(f.read()))
             student.carte_identite_photo = file_path
             
-            # --- OCR LOGIC (OpenRouter AI - Switch to Gemini Flash for better OCR) ---
+            # --- OCR LOGIC (OpenRouter AI - Reverted to Molmo per user request) ---
             newly_detected_nin = None
             try:
                 import requests
                 import json
                 import base64
                 import mimetypes
+                from django.conf import settings
                 
                 mime_type, _ = mimetypes.guess_type(path)
                 if not mime_type: mime_type = 'image/jpeg'
@@ -9873,8 +9874,13 @@ def api_student_upload_docs(request):
                 image_bytes = sensed_file.read()
                 base64_image = base64.b64encode(image_bytes).decode('utf-8')
                 
-                api_key = os.environ.get('OPENROUTER_API_KEY', "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")
+                # Retrieve API Key from settings (environment variable)
+                api_key = getattr(settings, 'OPENROUTER_API_KEY', os.environ.get('OPENROUTER_API_KEY'))
                 
+                if not api_key:
+                    print("ERROR: OPENROUTER_API_KEY not found in environment or settings.")
+                    return JsonResponse({'success': False, 'error': 'Configuration API manquante sur le serveur'}, status=500)
+
                 response = requests.post(
                   url="https://openrouter.ai/api/v1/chat/completions",
                   headers={
@@ -9882,14 +9888,14 @@ def api_student_upload_docs(request):
                     "Content-Type": "application/json",
                   },
                   data=json.dumps({
-                    "model": "google/gemini-flash-1.5:free", # Gemini is superior for OCR
+                    "model": "allenai/molmo-2-8b:free",
                     "messages": [
                       {
                         "role": "user",
                         "content": [
                           {
                             "type": "text",
-                            "text": "OCR TASK: Identify and extract the 18-digit National Identification Number (NIN) from this card. Look for a long continuous sequence of 18 digits. Return ONLY the 18 digits, nothing else."
+                            "text": "Extract the National Identification Number (NIN) from this Identity Card. Look for a long number (usually 18 digits). Return ONLY the digits of the number, nothing else."
                           },
                           {
                             "type": "image_url",
@@ -9906,38 +9912,36 @@ def api_student_upload_docs(request):
                     ai_response = response.json()
                     try:
                         content = ai_response['choices'][0]['message']['content'].strip()
-                        print(f"DEBUG OCR: Raw response: {content}")
+                        print(f"DEBUG OCR: Molmo response: {content}")
                         
                         import re
-                        # Clean spaces/dots and find sequences of 17-19 digits
-                        all_numbers = re.findall(r'\d{17,20}', content.replace(" ", "").replace(".", ""))
+                        # Clean spaces/dots and find sequences of 9-20 digits
+                        all_numbers = re.findall(r'\d{9,22}', content.replace(" ", "").replace(".", ""))
                         
                         if all_numbers:
+                            # Use the longest numeric sequence
                             newly_detected_nin = max(all_numbers, key=len)
                             student.nin = newly_detected_nin
-                            print(f"DEBUG OCR: Successful detection: {newly_detected_nin}")
+                            print(f"DEBUG OCR: New NIN detected: {newly_detected_nin}")
                         else:
-                            # Fallback: search for any sequence of 9+ digits if 18 not found exactly
-                            backup = re.findall(r'\d{9,25}', content.replace(" ", ""))
-                            if backup:
-                                newly_detected_nin = max(backup, key=len)
-                                student.nin = newly_detected_nin
-                    except:
-                        pass
+                            print(f"DEBUG OCR: No digits found in AI response.")
+                    except (KeyError, IndexError):
+                        print("DEBUG OCR: Parsing AI response failed.")
                 else:
-                    print(f"DEBUG OCR: API Error {response.status_code}")
+                    print(f"DEBUG OCR: API Error {response.status_code}: {response.text}")
 
             except Exception as e:
-                print(f"DEBUG OCR: Exception {str(e)}")
+                print(f"DEBUG OCR: Global Exception: {str(e)}")
             # ---------------------------
 
+            # Update verification step
             if student.verification_step < 1:
                 student.verification_step = 1
             
-            # Save carefully
+            # Save safely
             student.save()
             
-            # Force persistence
+            # Persistent update in DB
             if newly_detected_nin:
                 Etudiant.objects.filter(pk=student.id).update(nin=newly_detected_nin)
             
@@ -9946,7 +9950,7 @@ def api_student_upload_docs(request):
             return JsonResponse({
                 'success': True, 
                 'message': 'Analyse terminée', 
-                'nin_detected': newly_detected_nin,
+                'nin_detected': newly_detected_nin, # Returns ONLY what was just found (null if failed)
                 'student_id': student.id
             })
             
