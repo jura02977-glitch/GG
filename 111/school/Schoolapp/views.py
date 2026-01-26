@@ -9883,99 +9883,103 @@ def api_student_upload_docs(request):
                 
                 if not api_key:
                     debug_msg = "Clé API manquante sur Railway"
-                    return JsonResponse({'success': False, 'error': debug_msg}, status=500)
-
-                response = requests.post(
-                  url="https://openrouter.ai/api/v1/chat/completions",
-                  headers={
-                    "Authorization": f"Bearer {api_key}",
-                    "Content-Type": "application/json",
-                    "HTTP-Referer": "https://genieschool.up.railway.app",
-                    "X-Title": "GenieSchool",
-                  },
-                  data=json.dumps({
-                    "model": "allenai/molmo-2-8b:free",
-                    "messages": [
-                      {
-                        "role": "user",
-                        "content": [
+                    raw_ai_response = "API_KEY_MISSING"
+                else:
+                    response = requests.post(
+                      url="https://openrouter.ai/api/v1/chat/completions",
+                      headers={
+                        "Authorization": f"Bearer {api_key}",
+                        "Content-Type": "application/json",
+                        "HTTP-Referer": "https://genieschool.up.railway.app",
+                        "X-Title": "GenieSchool",
+                      },
+                      data=json.dumps({
+                        "model": "allenai/molmo-2-8b:free",
+                        "messages": [
                           {
-                            "type": "text",
-                            "text": "Identify and extract the National Identification Number (NIN) from this card. Return ONLY the digits, no other text."
-                          },
-                          {
-                            "type": "image_url",
-                            "image_url": { "url": f"data:{mime_type};base64,{base64_image}" }
+                            "role": "user",
+                            "content": [
+                              {
+                                "type": "text",
+                                "text": "Identify and extract the National Identification Number (NIN) from this card. Return ONLY the digits, no other text."
+                              },
+                              {
+                                "type": "image_url",
+                                "image_url": { "url": f"data:{mime_type};base64,{base64_image}" }
+                              }
+                            ]
                           }
                         ]
-                      }
-                    ]
-                  }),
-                  timeout=30 
-                )
-                
-                if response.status_code == 200:
-                    try:
-                        ai_response = response.json()
-                    except Exception as e_json:
-                        ai_response = None
-                        raw_ai_response = f"JSON parse error: {str(e_json)} | text: {response.text[:200]}"
-                        debug_msg = "Erreur: impossible de parser la réponse JSON de l'API"
-                        print(f"DEBUG OCR: JSON parse error: {str(e_json)}")
+                      }),
+                      timeout=30 
+                    )
+                    
+                    if response.status_code == 200:
+                        try:
+                            ai_response = response.json()
+                        except Exception as e_json:
+                            ai_response = None
+                            raw_ai_response = f"JSON parse error: {str(e_json)}"
+                            debug_msg = "Erreur: impossible de parser la réponse JSON de l'API"
+                            print(f"DEBUG OCR: JSON parse error: {str(e_json)}")
 
-                    try:
                         # Extract content from model response if available
-                        content = None
-                        if ai_response:
-                            # defensive access
-                            choices = ai_response.get('choices') if isinstance(ai_response, dict) else None
-                            if choices and len(choices) > 0:
-                                msg = choices[0].get('message') if isinstance(choices[0], dict) else None
-                                if msg and 'content' in msg:
-                                    content = msg['content']
-
-                        if content is None:
-                            content = response.text or ""
-
-                        content = content.strip() if isinstance(content, str) else str(content)
-                        raw_ai_response = content[:200]  # keep a reasonable preview for debugging
-                        print(f"DEBUG OCR: AI Response content (preview): {raw_ai_response}")
-
-                        import re
-                        # 1. Nettoyage : retirer espaces, points, tirets et sauts de ligne
-                        clean_content = content.replace(" ", "").replace(".", "").replace("-", "").replace("\n", "")
-
-                        # 2. Recherche de blocs de chiffres (entre 8 et 22 chiffres) — acceptons 8+ pour tolérance
-                        all_numbers = re.findall(r'\d{8,22}', clean_content)
-
-                        # 3. Si aucun bloc 8+ trouvé, tenter une recherche plus permissive (6+)
-                        if not all_numbers:
-                            alt_numbers = re.findall(r'\d{6,22}', clean_content)
-                            if alt_numbers:
-                                all_numbers = alt_numbers
-                                debug_msg = f"Fallback: aucun bloc >=8, trouvé blocs >=6 ({len(all_numbers)})"
-
-                        if all_numbers:
-                            # Prendre le bloc le plus long (probable NIN)
-                            newly_detected_nin = max(all_numbers, key=len)
-                            student.nin = newly_detected_nin
-                            debug_msg = f"Succès: {len(all_numbers)} blocs trouvés. NIN choisi: {newly_detected_nin}"
+                        if ai_response is None:
+                            # Already handled above
+                            pass
                         else:
-                            debug_msg = f"Échec: Aucun bloc de chiffres pertinent trouvé dans la réponse."
-                    except Exception as e:
-                        debug_msg = f"Erreur lors du traitement de la réponse AI: {str(e)}"
-                        print(f"DEBUG OCR: Exception processing AI response: {str(e)}")
-                        if 'ai_response' in locals() and ai_response:
-                            raw_ai_response = str(ai_response)[:200]
-                else:
-                    debug_msg = f"Erreur API ({response.status_code})"
-                    raw_ai_response = f"Erreur: {response.text[:200]}"
-                    print(f"DEBUG OCR: API Error: {response.text}")
-                    # Ne pas retourner 500 ici, on veut voir l'erreur sur le mobile
+                            try:
+                                content = None
+                                if ai_response:
+                                    # defensive access
+                                    choices = ai_response.get('choices') if isinstance(ai_response, dict) else None
+                                    if choices and len(choices) > 0:
+                                        msg = choices[0].get('message') if isinstance(choices[0], dict) else None
+                                        if msg and 'content' in msg:
+                                            content = msg['content']
+
+                                if content is None:
+                                    content = response.text or ""
+
+                                content = content.strip() if isinstance(content, str) else str(content)
+                                raw_ai_response = content[:200]  # keep a reasonable preview for debugging
+                                print(f"DEBUG OCR: AI Response content (preview): {raw_ai_response}")
+
+                                import re
+                                # 1. Nettoyage : retirer espaces, points, tirets et sauts de ligne
+                                clean_content = content.replace(" ", "").replace(".", "").replace("-", "").replace("\n", "")
+
+                                # 2. Recherche de blocs de chiffres (entre 8 et 22 chiffres) — acceptons 8+ pour tolérance
+                                all_numbers = re.findall(r'\d{8,22}', clean_content)
+
+                                # 3. Si aucun bloc 8+ trouvé, tenter une recherche plus permissive (6+)
+                                if not all_numbers:
+                                    alt_numbers = re.findall(r'\d{6,22}', clean_content)
+                                    if alt_numbers:
+                                        all_numbers = alt_numbers
+                                        debug_msg = f"Fallback: aucun bloc >=8, trouvé blocs >=6 ({len(all_numbers)})"
+
+                                if all_numbers:
+                                    # Prendre le bloc le plus long (probable NIN)
+                                    newly_detected_nin = max(all_numbers, key=len)
+                                    student.nin = newly_detected_nin
+                                    debug_msg = f"Succès: {len(all_numbers)} blocs trouvés. NIN choisi: {newly_detected_nin}"
+                                else:
+                                    debug_msg = f"Échec: Aucun bloc de chiffres pertinent trouvé dans la réponse."
+                            except Exception as e:
+                                debug_msg = f"Erreur lors du traitement de la réponse AI: {str(e)}"
+                                print(f"DEBUG OCR: Exception processing AI response: {str(e)}")
+                                if 'ai_response' in locals() and ai_response:
+                                    raw_ai_response = str(ai_response)[:200]
+                    else:
+                        debug_msg = f"Erreur API ({response.status_code})"
+                        raw_ai_response = f"HTTP {response.status_code}"
+                        print(f"DEBUG OCR: API Error: {response.text}")
 
 
             except Exception as e:
                 debug_msg = f"Exception Système OCR: {str(e)}"
+                raw_ai_response = f"EXCEPTION: {str(e)[:100]}"
                 print(f"DEBUG OCR: Global Exception: {str(e)}")
             # ---------------------------
 
