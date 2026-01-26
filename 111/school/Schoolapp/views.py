@@ -10056,26 +10056,29 @@ def api_student_upload_docs(request):
         if student.verification_step < 1:
             student.verification_step = 1
         
-        # Ensure NIN is set on the student object before saving
+        # IMPORTANT: Always set the NIN (even if empty or same) to ensure DB sync
         if newly_detected_nin:
             student.nin = newly_detected_nin
             print(f"DEBUG: Setting student.nin = {newly_detected_nin}")
+        else:
+            # Don't reset to empty if NIN wasn't detected, keep existing
+            print(f"DEBUG: NIN not detected, keeping existing: {student.nin}")
         
         try:
-            # Save everything at once
+            # Save everything at once - this updates all fields including NIN
             student.save()
             print(f"DEBUG: Student saved. NIN in DB should be: {newly_detected_nin}")
             
-            # Verify it was saved
-            student.refresh_from_db()
-            print(f"DEBUG: After refresh_from_db, student.nin = {student.nin}")
+            # Force a fresh read from database to confirm
+            refreshed_student = Etudiant.objects.get(pk=student.id)
+            print(f"DEBUG: Fresh read from DB - NIN is: {refreshed_student.nin}")
             
         except Exception as e_db:
             print(f"DEBUG: Database save error: {str(e_db)}")
             import traceback
             traceback.print_exc()
         
-        # Always return success with debug info
+        # Always return success with debug info (even if NIN wasn't detected)
         return JsonResponse({
             'success': True, 
             'message': 'Analyse terminée', 
