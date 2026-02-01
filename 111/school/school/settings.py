@@ -106,24 +106,29 @@ WSGI_APPLICATION = 'school.wsgi.application'
 ON_RAILWAY = os.environ.get('RAILWAY_ENVIRONMENT_NAME') is not None
 
 # Primary database configuration
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.environ.get('MYSQLDATABASE', 'railway'),
-        'USER': os.environ.get('MYSQLUSER', 'root'),
-        'PASSWORD': os.environ.get('MYSQLPASSWORD', 'ZPduFjruVJRTYXwPGVaudOiyChOZWGnT' if ON_RAILWAY else ''),
-        'HOST': os.environ.get('MYSQLHOST', 'mysql.railway.internal' if ON_RAILWAY else 'localhost'),
-        'PORT': int(os.environ.get('MYSQLPORT', '3306')),
-        'CONN_MAX_AGE': 600,  # Connection pooling
-        'OPTIONS': {
-            'charset': 'utf8mb4',
-            'connect_timeout': 10,
-            'read_timeout': 30,
-            'write_timeout': 30,
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-        },
+
+ON_RAILWAY = os.environ.get('RAILWAY_ENVIRONMENT_NAME') is not None
+
+if ON_RAILWAY and os.environ.get('DATABASE_URL'):
+    DATABASES = {
+        'default': dj_database_url.parse(os.environ.get('DATABASE_URL'))
     }
-}
+else:
+    # Local fallback
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'railway',
+            'USER': 'root',
+            'PASSWORD': '',
+            'HOST': 'localhost',
+            'PORT': 3306,
+            'OPTIONS': {
+                'charset': 'utf8mb4',
+            },
+        }
+    }
+
 
 
 
